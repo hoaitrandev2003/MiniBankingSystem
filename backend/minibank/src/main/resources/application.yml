@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: minibank
+datasource:
+  url: jdbc:mysql://localhost:3307/mini_banking
+  username: root
+  password: admin123
+server:
+  port: 8081

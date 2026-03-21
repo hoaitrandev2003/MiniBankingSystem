@@ -1,0 +1,18 @@
+HTTrack3.49-2+htsswf+htsjava launched on Thu, 19 Mar 2026 21:23:26 at https://banca.windstripedesign.ro/ +*.png +*.gif +*.jpg +*.jpeg +*.css +*.js -ad.doubleclick.net/* -mime:application/foobar
+(winhttrack -qwC2%Ps2u1%s%uN0%I0p3DaK0H0%kf2A25000%f#f -F "Mozilla/4.5 (compatible; HTTrack 3.0x; Windows 98)" -%F "<!-- Mirrored from %s%s by HTTrack Website Copier/3.x [XR&CO'2014], %s -->" -%l "en, *" https://banca.windstripedesign.ro/ -O1 "D:\themebank\bank" +*.png +*.gif +*.jpg +*.jpeg +*.css +*.js -ad.doubleclick.net/* -mime:application/foobar )
+
+Information, Warnings and Errors reported for this mirror:
+note:	the hts-log.txt file, and hts-cache folder, may contain sensitive information,
+	such as username/password authentication for websites mirrored in this project
+	do not share these files/folders if you want these information to remain private
+
+21:23:28	Warning: 	Moved Permanently for https://banca.windstripedesign.ro/robots.txt
+21:23:28	Warning: 	File has moved from https://banca.windstripedesign.ro/robots.txt to https://banca.windstripedesign.ro/en/robots.txt
+21:23:28	Warning: 	Moved Permanently for https://banca.windstripedesign.ro/
+21:23:28	Warning: 	File has moved from https://banca.windstripedesign.ro/ to https://banca.windstripedesign.ro/en/
+21:32:03	Error: 	"Not Found" (404) at link https://banca.windstripedesign.ro/cdn-cgi/l/email-protection (from https://banca.windstripedesign.ro/en/home/demo-02)
+21:32:07	Error: 	"Not Found" (404) at link https://banca.windstripedesign.ro/en/banca/images/apply-loan/icon-4.1.png (from https://banca.windstripedesign.ro/en/loan/loan-application)
+21:32:07	Error: 	"Not Found" (404) at link https://banca.windstripedesign.ro/en/banca/images/apply-loan/icon-4.2.png (from https://banca.windstripedesign.ro/en/loan/loan-application)
+
+HTTrack Website Copier/3.49-2 mirror complete in 11 minutes 19 seconds : 786 links scanned, 781 files written (41530819 bytes overall) [23780827 bytes received at 35023 bytes/sec], 22490559 bytes transferred using HTTP compression in 476 files, ratio 17%, 63.8 requests per connection
+(3 errors, 4 warnings, 0 messages)
