@@ -8,7 +8,7 @@ import java.util.Set;
 
 @Data
 @Entity(name = "roles")
-public class Role {
+public class RoleEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -21,6 +21,6 @@ public class Role {
     private String description;
 
     @JsonIgnore
-    @OneToMany(mappedBy = "role")
-    private Set<User> users;
+    @OneToMany(mappedBy = "roleEntity")
+    private Set<UserEntity> userEntities;
 }

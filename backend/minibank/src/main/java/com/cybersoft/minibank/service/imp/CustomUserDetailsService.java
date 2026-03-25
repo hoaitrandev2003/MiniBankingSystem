@@ -1,4 +1,4 @@
-package com.cybersoft.minibank.services.imp;
+package com.cybersoft.minibank.service.imp;
 
 import com.cybersoft.minibank.entity.UserEntity;
 import com.cybersoft.minibank.repository.UserRepository;

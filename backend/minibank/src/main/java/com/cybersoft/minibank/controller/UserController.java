@@ -1,6 +1,6 @@
 package com.cybersoft.minibank.controller;
 
-import com.cybersoft.minibank.entity.User;
+import com.cybersoft.minibank.entity.UserEntity;
 import com.cybersoft.minibank.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -16,14 +16,14 @@ public class UserController {
 
     @GetMapping("/users")
     public ResponseEntity<?> getAllUser(){
-        List<User> list = userService.getAllUser();
+        List<UserEntity> list = userService.getAllUser();
         return ResponseEntity.ok(list);
     }
 
     @PostMapping("/users")
-    public ResponseEntity<?> createUser(@RequestBody User user){
-        User user1 = userService.createUser(user);
-        return ResponseEntity.ok(user1);
+    public ResponseEntity<?> createUser(@RequestBody UserEntity userEntity){
+        UserEntity userEntity1 = userService.createUser(userEntity);
+        return ResponseEntity.ok(userEntity1);
     }
 
     @GetMapping("/users/{id}")
@@ -32,8 +32,8 @@ public class UserController {
     }
 
     @PutMapping("/users/{id}")
-    public ResponseEntity<?> updateUser(@PathVariable int id,@RequestBody User user){
-        return ResponseEntity.ok(userService.updateUser(id,user));
+    public ResponseEntity<?> updateUser(@PathVariable int id,@RequestBody UserEntity userEntity){
+        return ResponseEntity.ok(userService.updateUser(id, userEntity));
     }
 
     @DeleteMapping("/users/{id}")

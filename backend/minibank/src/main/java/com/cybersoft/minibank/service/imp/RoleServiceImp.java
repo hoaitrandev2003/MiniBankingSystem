@@ -1,6 +1,6 @@
 package com.cybersoft.minibank.service.imp;
 
-import com.cybersoft.minibank.entity.Role;
+import com.cybersoft.minibank.entity.RoleEntity;
 import com.cybersoft.minibank.repository.RoleRepostitory;
 import com.cybersoft.minibank.service.RoleService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,19 +14,19 @@ public class RoleServiceImp implements RoleService {
     private RoleRepostitory roleRepostitory;
 
     @Override
-    public List<Role> getAllRole() {
+    public List<RoleEntity> getAllRole() {
         return roleRepostitory.findAll();
     }
 
     @Override
-    public Role createRole(Role role) {
-        return roleRepostitory.save(role);
+    public RoleEntity createRole(RoleEntity roleEntity) {
+        return roleRepostitory.save(roleEntity);
     }
 
     @Override
     public void deleteRole(int id) {
-        Role role = roleRepostitory.findById(id)
+        RoleEntity roleEntity = roleRepostitory.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm id: " + id));
-        roleRepostitory.delete(role);
+        roleRepostitory.delete(roleEntity);
     }
 }
