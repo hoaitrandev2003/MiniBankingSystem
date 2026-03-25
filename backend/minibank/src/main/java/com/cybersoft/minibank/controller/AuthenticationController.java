@@ -1,7 +1,7 @@
 package com.cybersoft.minibank.controller;
 
-import com.cybersoft.minibank.dto.LoginDto;
-import com.cybersoft.minibank.services.AuthenticationServices;
+import com.cybersoft.minibank.dto.LoginDTO;
+import com.cybersoft.minibank.service.AuthenticationServices;
 import com.cybersoft.minibank.utils.JwtUtilHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -19,7 +19,7 @@ public class AuthenticationController {
 
     @PostMapping("/sign-in")
     public ResponseEntity<?> signIn(@RequestParam String email, @RequestParam String password){
-        LoginDto result = authenticationServices.login(email, password);
+        LoginDTO result = authenticationServices.login(email, password);
         return ResponseEntity.ok(result);
     }
 
