@@ -17,7 +17,7 @@ public class SecurityConfig {
         return http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(request -> {
-                    request.requestMatchers("/auth/*").permitAll();
+                    request.requestMatchers("/auth/*","/api/*").permitAll();
                     // Cho phép đường dẫn có quyền ADMIN truy cập
                     request.requestMatchers(HttpMethod.GET , "/*").hasRole("ADMIN");
                     // cho phép tất cả đường dẫn truy cập
