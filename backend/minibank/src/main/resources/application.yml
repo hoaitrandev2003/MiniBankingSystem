@@ -7,3 +7,5 @@ spring:
     password: admin123
 server:
   port: 8080
+jwt:
+  key: XykIIDx7IrNXR8k19vju963FvJpQp1FPmAqZRMj6Ups=
