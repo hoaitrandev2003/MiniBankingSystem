@@ -12,7 +12,7 @@ import java.math.BigDecimal;
 public class AccountController {
 
     @Autowired
-    private BankAccountService bankAccountService; // Gọi Interface, không gọi thẳng Imp (Design Pattern)
+    private BankAccountService bankAccountService;
 
     //Tạo tài khoản
 
