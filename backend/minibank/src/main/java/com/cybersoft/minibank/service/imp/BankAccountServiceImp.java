@@ -1,5 +1,6 @@
 package com.cybersoft.minibank.service.imp;
 
+import com.cybersoft.minibank.dto.TransferRequestDTO;
 import com.cybersoft.minibank.entity.BankAccount;
 import com.cybersoft.minibank.entity.Transaction;
 import com.cybersoft.minibank.repository.BankAccountRepository;
@@ -10,7 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.util.Optional;
+import java.time.LocalDateTime;
 
 @Service
 public class BankAccountServiceImp implements BankAccountService {
@@ -91,4 +92,45 @@ public class BankAccountServiceImp implements BankAccountService {
 
         return accountNumber;
     }
+
+
+    //Chuyen tien
+    @Override
+    @Transactional
+    public void transferMoney(TransferRequestDTO request){
+        // 1 Valid
+        BankAccount fromAccount = accountRepository.findByAccountNumber(String.valueOf(request.getFromId()))
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy số tài khoản người gửi: " + request.getFromId()));
+
+        BankAccount toAccount = accountRepository.findByAccountNumber(String.valueOf(request.getToId()))
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy số tài khoản người nhận: " + request.getToId()));
+
+        // 2 kiem tra so du
+        if(fromAccount.getBalance().compareTo(request.getAmount()) < 0){
+            throw new  RuntimeException("Số dư không đủ để thực hiện giao dịch!");
+        }
+        // 3 thuc hien chuyen tien
+        fromAccount.setBalance(fromAccount.getBalance().subtract(request.getAmount()));
+        toAccount.setBalance(toAccount.getBalance().add(request.getAmount()));
+
+        accountRepository.save(fromAccount);
+        accountRepository.save(toAccount);
+
+
+        // 4 luu giao dich
+
+        Transaction tx = new Transaction();
+        tx.setFromAccountId(fromAccount.getId());
+        tx.setToAccountId(toAccount.getId());
+        tx.setAmount(request.getAmount());
+        tx.setCreatedAt(LocalDateTime.now());
+        tx.setStatus("SUCCESS");
+
+        transactionRepository.save(tx);
+    }
+
+
+
+
+
 }
