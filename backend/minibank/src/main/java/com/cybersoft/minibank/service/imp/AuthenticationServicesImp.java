@@ -1,9 +1,9 @@
-package com.cybersoft.minibank.services.imp;
+package com.cybersoft.minibank.service.imp;
 
-import com.cybersoft.minibank.dto.LoginDto;
+import com.cybersoft.minibank.dto.LoginDTO;
 import com.cybersoft.minibank.entity.UserEntity;
 import com.cybersoft.minibank.repository.UserRepository;
-import com.cybersoft.minibank.services.AuthenticationServices;
+import com.cybersoft.minibank.service.AuthenticationServices;
 import com.cybersoft.minibank.utils.JwtUtilHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -23,7 +23,7 @@ public class AuthenticationServicesImp implements AuthenticationServices {
     private AuthenticationManager authenticationManager;
 
     @Override
-    public LoginDto login(String email, String password) {
+    public LoginDTO login(String email, String password) {
         //Kiểm tra xem có trong database hay không
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(email, password)
@@ -33,7 +33,7 @@ public class AuthenticationServicesImp implements AuthenticationServices {
 
         String jwt = jwtHelper.generateToken(email);
 
-        LoginDto loginDto = new LoginDto();
+        LoginDTO loginDto = new LoginDTO();
         loginDto.setEmail(user.getEmail());
         loginDto.setToken(jwt);
 

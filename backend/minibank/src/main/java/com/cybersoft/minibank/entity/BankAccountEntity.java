@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @Entity(name = "bank_accounts")
-public class BankAccount {
+public class BankAccountEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;

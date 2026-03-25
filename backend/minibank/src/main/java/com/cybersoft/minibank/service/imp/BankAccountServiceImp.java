@@ -1,7 +1,7 @@
 package com.cybersoft.minibank.service.imp;
 
-import com.cybersoft.minibank.entity.BankAccount;
-import com.cybersoft.minibank.entity.Transaction;
+import com.cybersoft.minibank.entity.BankAccountEntity;
+import com.cybersoft.minibank.entity.TransactionEntity;
 import com.cybersoft.minibank.repository.BankAccountRepository;
 import com.cybersoft.minibank.repository.TransactionRepository;
 import com.cybersoft.minibank.service.BankAccountService;
@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.util.Optional;
 
 @Service
 public class BankAccountServiceImp implements BankAccountService {
@@ -32,13 +31,13 @@ public class BankAccountServiceImp implements BankAccountService {
             throw new RuntimeException("Số tiền nạp phải lớn hơn 0!");
         }
 
-        BankAccount account = accountRepository.findByAccountNumber(accountNumber)
+        BankAccountEntity account = accountRepository.findByAccountNumber(accountNumber)
                 .orElseThrow(() -> new RuntimeException("Tài khoản không tồn tại!"));
 
         account.setBalance(account.getBalance().add(amount));
         accountRepository.save(account);
 
-        Transaction tx = new Transaction();
+        TransactionEntity tx = new TransactionEntity();
         tx.setToAccountId(account.getId());
         tx.setAmount(amount);
         tx.setTransactionType("DEPOSIT");
@@ -58,7 +57,7 @@ public class BankAccountServiceImp implements BankAccountService {
         String newAccountNumber = generateUniqueAccountNumber();
 
         // 3. Khởi tạo đối tượng BankAccount
-        BankAccount account = new BankAccount();
+        BankAccountEntity account = new BankAccountEntity();
         account.setUserId(userId);
         account.setAccountNumber(newAccountNumber);
         account.setBalance(BigDecimal.ZERO); // QUAN TRỌNG: Luôn để mặc định là 0

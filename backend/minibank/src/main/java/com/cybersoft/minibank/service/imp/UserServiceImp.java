@@ -1,7 +1,6 @@
 package com.cybersoft.minibank.service.imp;
 
-import com.cybersoft.minibank.dto.UserDTO;
-import com.cybersoft.minibank.entity.User;
+import com.cybersoft.minibank.entity.UserEntity;
 import com.cybersoft.minibank.repository.UserRepository;
 import com.cybersoft.minibank.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,41 +16,41 @@ public class UserServiceImp implements UserService {
     private UserRepository userRepository;
 
     @Override
-    public User createUser(User user) {
-        return userRepository.save(user);
+    public UserEntity createUser(UserEntity userEntity) {
+        return userRepository.save(userEntity);
     }
 
     @Override
-    public List<User> getAllUser() {
+    public List<UserEntity> getAllUser() {
         return userRepository.findAll();
     }
 
     @Override
-    public Optional<User> getUserById(int id) {
+    public Optional<UserEntity> getUserById(int id) {
         return userRepository.findById(id);
     }
 
     @Override
-    public User updateUser(int id, User user) {
-        User updatedUser = userRepository.findById(id)
+    public UserEntity updateUser(int id, UserEntity userEntity) {
+        UserEntity updatedUserEntity = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy user id: " + id));
 
-            updatedUser.setEmail(user.getEmail());
-            updatedUser.setPassword(user.getPassword());
-            updatedUser.setFullName(user.getFullName());
-            updatedUser.setPhone(user.getPhone());
-            updatedUser.setGender(user.getGender());
-            updatedUser.setDateOfBirth(user.getDateOfBirth());
-            updatedUser.setAddress(user.getAddress());
-            updatedUser.setIdentityNumber(user.getIdentityNumber());
+            updatedUserEntity.setEmail(userEntity.getEmail());
+            updatedUserEntity.setPassword(userEntity.getPassword());
+            updatedUserEntity.setFullName(userEntity.getFullName());
+            updatedUserEntity.setPhone(userEntity.getPhone());
+            updatedUserEntity.setGender(userEntity.getGender());
+            updatedUserEntity.setDateOfBirth(userEntity.getDateOfBirth());
+            updatedUserEntity.setAddress(userEntity.getAddress());
+            updatedUserEntity.setIdentityNumber(userEntity.getIdentityNumber());
 
-        return userRepository.save(updatedUser);
+        return userRepository.save(updatedUserEntity);
     }
 
     @Override
     public void deleteUser(int id) {
-        User user = userRepository.findById(id)
+        UserEntity userEntity = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy user id: " + id));
-            userRepository.delete(user);
+            userRepository.delete(userEntity);
     }
 }
