@@ -1,9 +1,11 @@
 spring:
   application:
     name: minibank
-datasource:
-  url: jdbc:mysql://localhost:3307/mini_banking
-  username: root
-  password: admin123
+  datasource:
+    url: jdbc:mysql://localhost:3307/mini_banking
+    username: root
+    password: admin123
 server:
-  port: 8081
+  port: 8080
+jwt:
+  key: XykIIDx7IrNXR8k19vju963FvJpQp1FPmAqZRMj6Ups=
