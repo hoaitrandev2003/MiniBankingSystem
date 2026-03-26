@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 
 @RestController
-@RequestMapping("accounts")
+@RequestMapping("api/accounts")
 public class AccountController {
 
     @Autowired
@@ -18,7 +18,7 @@ public class AccountController {
 
 
     //Nạp tiền
-    @PutMapping(path = "/deposit/{accountNumber}")
+    @PutMapping("/deposit/{accountNumber}")
     public ResponseEntity<?> deposit(
             @PathVariable String accountNumber,
             @RequestParam BigDecimal amount,
@@ -28,4 +28,9 @@ public class AccountController {
 
         return ResponseEntity.ok(result);
     }
+    //Lấy số dư
+    @GetMapping("/{accountNumber}/balance")
+    public ResponseEntity<?> getBalance(@PathVariable String accountNumber){
+        double balance =  bankAccountService.getAccountBalance(accountNumber);
+        return ResponseEntity.ok("Số dư của tài khoản " + accountNumber + " là: " + balance); }
 }

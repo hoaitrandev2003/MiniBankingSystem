@@ -50,33 +50,11 @@ public class BankAccountServiceImp implements BankAccountService {
         return "Nạp tiền thành công. Số dư hiện tại: " + newBalance;
     }
 
-    //Tạo tài khoản
-//    @Override
-//    @Transactional
-//    public String createAccount(int userId, String accountType) {
-//        // 1. Kiểm tra User tồn tại
-//        if (!userRepository.existsById(userId)) {
-//            return "Người dùng không tồn tại";
-//        }
-//
-//        // 2. Sinh số tài khoản ngẫu nhiên (Ví dụ 10 chữ số)
-//        String newAccountNumber = "VNB" + (long) (Math.random() * 10000000000L);
-//
-//        // 3. Khởi tạo thực thể
-//        BankAccountEntity newAccount = new BankAccountEntity();
-//        newAccount.setAccountNumber(newAccountNumber);
-//        newAccount.setAccountType(accountType);
-//        newAccount.setBalance(0.0);
-//        newAccount.setCurrency("VND");
-//        newAccount.setStatus("ACTIVE");
-//        newAccount.setCreatedAt(LocalDateTime.now());
-//        // Giả sử bạn có trường user trong BankAccountEntity để liên kết
-//        // newAccount.setUser(userRepository.findById(userId).get());
-//
-//        accountRepository.save(newAccount);
-//        return "Tạo tài khoản thành công: " + newAccountNumber;
-//    }
-
-
-
+    //Lấy số dư
+    @Override
+    public double getAccountBalance(String accountNumber) {
+        BankAccountEntity account = accountRepository.findByAccountNumber(accountNumber)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy tài khoản"));
+        return account.getBalance() ;
+    }
 }

@@ -13,7 +13,7 @@ import java.util.List;
 @Entity(name = "transactions")
 public class TransactionEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
     private String transactionCode;
     private double amount;
