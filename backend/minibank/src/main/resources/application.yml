@@ -5,6 +5,20 @@ spring:
     url: jdbc:mysql://localhost:3307/mini_banking
     username: root
     password: admin123
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: hoaitrandev@gmail.com
+    password: zsyiddggnqxfcfsu
+    protocol: smtp
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+      mail.debug: true
+logging:
+  level:
+    org.springframework.mail: INFO
+    jakarta.mail: INFO
 server:
   port: 8080
 jwt:
