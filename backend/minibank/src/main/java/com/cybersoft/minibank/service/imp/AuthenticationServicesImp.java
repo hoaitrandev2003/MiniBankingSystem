@@ -52,7 +52,7 @@ public class AuthenticationServicesImp implements AuthenticationServices {
         String jwt = jwtHelper.generateToken(username);
 
         LoginDTO loginDto = new LoginDTO();
-        loginDto.setEmail(user.getEmail());
+        loginDto.setUsername(username);
         loginDto.setToken(jwt);
 
         return loginDto;
@@ -67,7 +67,7 @@ public class AuthenticationServicesImp implements AuthenticationServices {
 
         UserEntity existingUser = userRepository.findByEmail(email);
         if(existingUser != null){
-            throw new RuntimeException("Người dùng đã tồn tại");
+           return "Email đã tồn tại";
         }
 
         // Tạo OTP
