@@ -17,14 +17,23 @@ public class AuthenticationController {
     @Autowired
     private AuthenticationServices authenticationServices;
 
+    //Đăng nhập
     @PostMapping("/sign-in")
-    public ResponseEntity<?> signIn(@RequestParam String email, @RequestParam String password){
-        LoginDTO result = authenticationServices.login(email, password);
+    public ResponseEntity<?> signIn(@RequestParam String username, @RequestParam String password){
+        LoginDTO result = authenticationServices.login(username, password);
         return ResponseEntity.ok(result);
     }
 
+    //Đăng kí
     @PostMapping("/sign-up")
-    public ResponseEntity<?> signUp(){
-        return ResponseEntity.ok("/sign-up");
+    public ResponseEntity<?> signUp(@RequestParam String email,@RequestParam String username, @RequestParam String password){
+        String result = authenticationServices.register(email,username,password);
+        return ResponseEntity.ok(result);
+    }
+
+    @PostMapping("/sign-up/verify")
+    public ResponseEntity<?> verifyOtp(@RequestParam String email, @RequestParam String otp){
+        String verifyOtp = authenticationServices.verifyOtp(email,otp);
+        return ResponseEntity.ok(verifyOtp);
     }
 }

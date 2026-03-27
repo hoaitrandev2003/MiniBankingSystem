@@ -17,6 +17,13 @@ public class JwtUtilFilter extends OncePerRequestFilter{
                                     jakarta.servlet.http.HttpServletResponse response,
                                     FilterChain filterChain)
             throws ServletException, IOException {
+
+        String path = request.getRequestURI();
+        // Bỏ qua các request auth
+        if(path.startsWith("/auth/")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
         filterChain.doFilter(request, response);
     }
 }
