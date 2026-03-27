@@ -1,6 +1,5 @@
 package com.cybersoft.minibank.controller;
 
-import com.cybersoft.minibank.dto.TransferRequestDTO;
 import com.cybersoft.minibank.service.BankAccountService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -29,6 +28,7 @@ public class AccountController {
 
         return ResponseEntity.ok(result);
     }
+<<<<<<< HEAD
 
     //Chuyen tien
 
@@ -47,8 +47,11 @@ public class AccountController {
         }
 
     }
+=======
+    //Lấy số dư
+    @GetMapping("/{accountNumber}/balance")
+    public ResponseEntity<?> getBalance(@PathVariable String accountNumber){
+        double balance =  bankAccountService.getAccountBalance(accountNumber);
+        return ResponseEntity.ok("Số dư của tài khoản " + accountNumber + " là: " + balance); }
+>>>>>>> 4474766c14ed2735daf8524fda82e5d633b2dcf1
 }
-
-
-
-

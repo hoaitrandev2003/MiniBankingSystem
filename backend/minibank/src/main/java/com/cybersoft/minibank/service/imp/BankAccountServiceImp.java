@@ -11,7 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Service
 public class BankAccountServiceImp implements BankAccountService {
@@ -44,34 +44,46 @@ public class BankAccountServiceImp implements BankAccountService {
         tx.setAmount(amount);
         tx.setTransactionType("DEPOSIT");
         tx.setStatus("SUCCESS");
-        transactionRepository.save(tx);
 
-        return "Nạp tiền thành công!";
+        transactionRepository.save(tx);
     }
 
-
+    ///  chuyen tien
     @Override
     @Transactional
-    public String createAccount(int userId, String accountType) {
-        // 1. Kiểm tra User có tồn tại không (nếu cần)
+    public void transferMoney(TransferRequestDTO request){
+        // 1. Tìm tài khoản
+        BankAccountEntity fromAccount = accountRepository.findByAccountNumber(String.valueOf(request.getFromId()))
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy người gửi: " + request.getFromId()));
 
-        // 2. Sinh số tài khoản ngẫu nhiên hoặc theo quy tắc (VD: 10 chữ số)
-        String newAccountNumber = generateUniqueAccountNumber();
+        BankAccountEntity toAccount = accountRepository.findByAccountNumber(String.valueOf(request.getToId()))
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy người nhận: " + request.getToId()));
 
-        // 3. Khởi tạo đối tượng BankAccount
-        BankAccount account = new BankAccount();
-        account.setUserId(userId);
-        account.setAccountNumber(newAccountNumber);
-        account.setBalance(BigDecimal.ZERO); // QUAN TRỌNG: Luôn để mặc định là 0
-        account.setAccount_type(accountType); // VD: SAVING, CURRENT
-        account.setStatus("ACTIVE");
+        // Lấy số tiền cần chuyển
+        double transferAmount = request.getAmount().doubleValue();
 
-        accountRepository.save(account);
+        // 2. Kiểm tra số dư (Dùng toán tử so sánh < bình thường cho double)
+        if (fromAccount.getBalance() < transferAmount) {
+            throw new RuntimeException("Số dư không đủ để thực hiện giao dịch!");
+        }
 
-        return "Tạo tài khoản thành công! Số TK của bạn là: " + newAccountNumber;
+        // 3. Thực hiện chuyển tiền
+        fromAccount.setBalance(fromAccount.getBalance() - transferAmount);
+        toAccount.setBalance(toAccount.getBalance() + transferAmount);
+
+        accountRepository.save(fromAccount);
+        accountRepository.save(toAccount);
+
+        // 4. Lưu giao dịch (Dùng TransactionEntity theo chuẩn mới của Lead)
+        TransactionEntity tx = new TransactionEntity();
+        tx.setFromAccount(fromAccount); // Thường Lead sẽ để quan hệ Object thay vì Id
+        tx.setToAccount(toAccount);
+        tx.setAmount(BigDecimal.valueOf(transferAmount)); // Nếu bảng Transaction dùng BigDecimal
+        tx.setCreatedAt(LocalDateTime.now());
+        tx.setStatus("SUCCESS");
+
+        transactionRepository.save(tx);
     }
-
-
 
 
 
@@ -92,45 +104,4 @@ public class BankAccountServiceImp implements BankAccountService {
 
         return accountNumber;
     }
-
-
-    //Chuyen tien
-    @Override
-    @Transactional
-    public void transferMoney(TransferRequestDTO request){
-        // 1 Valid
-        BankAccount fromAccount = accountRepository.findByAccountNumber(String.valueOf(request.getFromId()))
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy số tài khoản người gửi: " + request.getFromId()));
-
-        BankAccount toAccount = accountRepository.findByAccountNumber(String.valueOf(request.getToId()))
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy số tài khoản người nhận: " + request.getToId()));
-
-        // 2 kiem tra so du
-        if(fromAccount.getBalance().compareTo(request.getAmount()) < 0){
-            throw new  RuntimeException("Số dư không đủ để thực hiện giao dịch!");
-        }
-        // 3 thuc hien chuyen tien
-        fromAccount.setBalance(fromAccount.getBalance().subtract(request.getAmount()));
-        toAccount.setBalance(toAccount.getBalance().add(request.getAmount()));
-
-        accountRepository.save(fromAccount);
-        accountRepository.save(toAccount);
-
-
-        // 4 luu giao dich
-
-        Transaction tx = new Transaction();
-        tx.setFromAccountId(fromAccount.getId());
-        tx.setToAccountId(toAccount.getId());
-        tx.setAmount(request.getAmount());
-        tx.setCreatedAt(LocalDateTime.now());
-        tx.setStatus("SUCCESS");
-
-        transactionRepository.save(tx);
-    }
-
-
-
-
-
 }

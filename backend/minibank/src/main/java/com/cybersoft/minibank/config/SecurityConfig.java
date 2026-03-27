@@ -26,12 +26,13 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http
                 .csrf(csrf -> csrf.disable())
+                .cors(cors -> {}) //bật cor
                 // dùng JWT → stateless
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(request -> {
-                    request.requestMatchers("/auth/**").permitAll();
+                    request.requestMatchers("/auth/**","/api/**").permitAll();
                     request.anyRequest().authenticated();
                 })
 
@@ -51,6 +52,5 @@ public class SecurityConfig {
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
-
 
 }

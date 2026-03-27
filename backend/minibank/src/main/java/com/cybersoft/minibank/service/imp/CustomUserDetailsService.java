@@ -1,4 +1,4 @@
-package com.cybersoft.minibank.services.imp;
+package com.cybersoft.minibank.service.imp;
 
 import com.cybersoft.minibank.entity.UserEntity;
 import com.cybersoft.minibank.repository.UserRepository;
@@ -18,17 +18,17 @@ public class CustomUserDetailsService implements UserDetailsService {
     private UserRepository userRepository;
 
     @Override
-    public UserDetails loadUserByUsername(String email) {
-        UserEntity user = userRepository.findByEmail(email);
+    public UserDetails loadUserByUsername(String username) {
+        UserEntity user = userRepository.findByUserName(username);
 
         if (user == null) {
             throw new UsernameNotFoundException("User not found");
         }
 
-        return new User(
-                user.getEmail(),
-                user.getPassword(),
-                List.of(new SimpleGrantedAuthority("ROLE_USER"))
-        );
+        return org.springframework.security.core.userdetails.User
+                .withUsername(user.getUserName())
+                .password(user.getPassword())
+                .authorities("ROLE_USER")
+                .build();
     }
 }

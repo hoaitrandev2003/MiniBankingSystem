@@ -1,6 +1,6 @@
 package com.cybersoft.minibank.controller;
 
-import com.cybersoft.minibank.entity.Role;
+import com.cybersoft.minibank.entity.RoleEntity;
 import com.cybersoft.minibank.service.RoleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -16,13 +16,13 @@ public class RoleController {
 
     @GetMapping("/roles")
     public ResponseEntity<?> getAllRole(){
-        List<Role> list = roleService.getAllRole();
+        List<RoleEntity> list = roleService.getAllRole();
         return ResponseEntity.ok(list);
     }
 
     @PostMapping("/roles")
-    public ResponseEntity<?> createRole(@RequestBody Role role){
-        Role created = roleService.createRole(role);
+    public ResponseEntity<?> createRole(@RequestBody RoleEntity roleEntity){
+        RoleEntity created = roleService.createRole(roleEntity);
         return ResponseEntity.ok(created);
     }
     @DeleteMapping("/roles")
