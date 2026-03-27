@@ -21,6 +21,7 @@ public class BankAccountEntity {
     private String currency;
     private String accountType;
     private double dailyTransferLimit;
+    @Version
     private int version;
     private String status;
     private LocalDateTime createdAt;
