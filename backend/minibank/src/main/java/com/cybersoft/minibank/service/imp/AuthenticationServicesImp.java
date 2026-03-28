@@ -40,7 +40,7 @@ public class AuthenticationServicesImp implements AuthenticationServices {
     @Autowired
     private OtpService otpService;
 
-    private LoginRespone loginRespone;
+    private LoginRespone loginRespone = new LoginRespone();
 
     private Map<String, RegisterDTO> tempUserStorage = new HashMap<>();
 
