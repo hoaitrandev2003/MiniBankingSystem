@@ -22,12 +22,12 @@ public class TransactionEntity {
     private LocalDateTime createdAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "from_account_id")
+    @JoinColumn(name = "from_account_number")
     @JsonBackReference
     private BankAccountEntity fromAccount;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "to_account_id")
+    @JoinColumn(name = "to_account_number")
     @JsonBackReference
     private BankAccountEntity toAccount;
 
