@@ -5,7 +5,6 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -21,7 +20,6 @@ public class BankAccountEntity {
     private String currency;
     private String accountType;
     private double dailyTransferLimit;
-    @Version
     private int version;
     private String status;
     private LocalDateTime createdAt;
@@ -33,5 +31,4 @@ public class BankAccountEntity {
     @OneToMany(mappedBy = "toAccount")
     @JsonManagedReference
     private List<TransactionEntity> receivedTransactions;
-
 }
