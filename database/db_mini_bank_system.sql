@@ -9,7 +9,6 @@ CREATE TABLE roles (
 
 CREATE TABLE users (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    username VARCHAR(100) NOT NULL,
     email VARCHAR(150) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
     full_name VARCHAR(150),
@@ -49,8 +48,8 @@ CREATE TABLE transaction_categories (
 CREATE TABLE transactions (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     transaction_code VARCHAR(50) UNIQUE,
-    from_account_number VARCHAR(20),
-    to_account_number VARCHAR(20),
+    from_account_id INT,
+    to_account_id INT,
     amount DECIMAL(19,2),
     transaction_type VARCHAR(30),
     transaction_categories_id INT,
@@ -80,6 +79,8 @@ CREATE TABLE refresh_tokens (
 
 ALTER TABLE users ADD CONSTRAINT fk_users_role FOREIGN KEY (role_id)REFERENCES roles(id);
 ALTER TABLE bank_accounts ADD CONSTRAINT fk_accounts_user FOREIGN KEY (user_id)REFERENCES users(id);
+ALTER TABLE transactions ADD CONSTRAINT fk_transactions_from_account FOREIGN KEY (from_account_id)REFERENCES bank_accounts(id);
+ALTER TABLE transactions ADD CONSTRAINT fk_transactions_to_account FOREIGN KEY (to_account_id)REFERENCES bank_accounts(id);
 ALTER TABLE transactions ADD CONSTRAINT fk_transactions_category FOREIGN KEY (transaction_categories_id)REFERENCES transaction_categories(id);
 ALTER TABLE transaction_audit_logs ADD CONSTRAINT fk_audit_transaction FOREIGN KEY (transaction_id) REFERENCES transactions(id);
 ALTER TABLE transaction_audit_logs ADD CONSTRAINT fk_audit_user FOREIGN KEY (performed_by) REFERENCES users(id);
@@ -87,6 +88,6 @@ ALTER TABLE refresh_tokens ADD CONSTRAINT fk_token_user FOREIGN KEY (user_id)REF
 
 CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_accounts_user ON bank_accounts(user_id);
-CREATE INDEX idx_transactions_from ON transactions(from_account_number);
-CREATE INDEX idx_transactions_to ON transactions(to_account_number);
+CREATE INDEX idx_transactions_from ON transactions(from_account_id);
+CREATE INDEX idx_transactions_to ON transactions(to_account_id);
 CREATE INDEX idx_transaction_code ON transactions(transaction_code);
