@@ -28,9 +28,28 @@ public class AccountController {
 
         return ResponseEntity.ok(result);
     }
+
+    //Chuyen tien
+
+    @PostMapping("/transfer")
+    public ResponseEntity<?> transfer(@RequestBody TransferRequestDTO request) {
+        try {
+            bankAccountService.transferMoney(request);
+            return ResponseEntity.ok("Chuyển tiền thành công"); // 200
+
+
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage()); // Trả lỗi có đinh nghĩa
+
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Lỗi hệ thống: " + e.getMessage());
+        }
+
+    }
     //Lấy số dư
     @GetMapping("/{accountNumber}/balance")
     public ResponseEntity<?> getBalance(@PathVariable String accountNumber){
         double balance =  bankAccountService.getAccountBalance(accountNumber);
         return ResponseEntity.ok("Số dư của tài khoản " + accountNumber + " là: " + balance); }
+
 }
