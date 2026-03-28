@@ -1,8 +1,10 @@
 package com.cybersoft.minibank.service.imp;
 
-import com.cybersoft.minibank.dto.LoginDTO;
 import com.cybersoft.minibank.dto.RegisterDTO;
+import com.cybersoft.minibank.dto.VerifyDTO;
 import com.cybersoft.minibank.entity.UserEntity;
+import com.cybersoft.minibank.payload.request.LoginRequest;
+import com.cybersoft.minibank.payload.response.LoginRespone;
 import com.cybersoft.minibank.repository.UserRepository;
 import com.cybersoft.minibank.service.AuthenticationServices;
 import com.cybersoft.minibank.service.EmailService;
@@ -38,24 +40,24 @@ public class AuthenticationServicesImp implements AuthenticationServices {
     @Autowired
     private OtpService otpService;
 
+    @Autowired
+    private LoginRespone loginRespone;
+
     private Map<String, RegisterDTO> tempUserStorage = new HashMap<>();
 
     @Override
-    public LoginDTO login(String username, String password) {
+    public LoginRespone login(LoginRequest loginRequest) {
         //Kiểm tra xem có trong database hay không
         authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(username, password)
+                new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword())
         );
 
-        UserEntity user = userRepository.findByUserName(username);
+        UserEntity user = userRepository.findByUserName(loginRequest.getUsername());
 
-        String jwt = jwtHelper.generateToken(username);
+        String jwt = jwtHelper.generateToken(loginRequest.getUsername());
 
-        LoginDTO loginDto = new LoginDTO();
-        loginDto.setUsername(username);
-        loginDto.setToken(jwt);
-
-        return loginDto;
+        loginRespone.setToken(jwt);
+        return loginRespone;
     }
 
     public String generateOtp() {
@@ -63,52 +65,49 @@ public class AuthenticationServicesImp implements AuthenticationServices {
     }
 
     @Override
-    public String register(String email, String username, String password) {
+    public String register(RegisterDTO registerDTO) {
 
-        UserEntity existingUser = userRepository.findByEmail(email);
+        UserEntity existingUser = userRepository.findByEmail(registerDTO.getEmail());
         if(existingUser != null){
            return "Email đã tồn tại";
         }
 
         // Tạo OTP
         String otp = generateOtp();
-        otpService.saveOtp(email, otp);  // Lưu OTP đúng email
+        otpService.saveOtp(registerDTO.getEmail(), otp);  // Lưu OTP đúng email
 
         // Gửi mail
-        String result = emailService.sendSimpleMail(email, otp);
+        String result = emailService.sendSimpleMail(registerDTO.getEmail(), otp);
         if(result.equals("ERROR")){
             throw new RuntimeException("Gửi mail thất bại");
         }
 
         // Lưu tạm user
         RegisterDTO tempUser = new RegisterDTO();
-        tempUser.setUsername(username);
-        tempUser.setEmail(email);
-        tempUser.setPassword(password);
-        tempUserStorage.put(email, tempUser);
-        System.out.println("TempUserStorage: " + tempUserStorage.get(email));
+        tempUser.setUsername(registerDTO.getUsername());
+        tempUser.setEmail(registerDTO.getEmail());
+        tempUser.setPassword(registerDTO.getPassword());
+        tempUserStorage.put(registerDTO.getEmail(), tempUser);
+        System.out.println("TempUserStorage: " + tempUserStorage.get(registerDTO.getEmail()));
 
         return "OTP đã được gửi về email";
     }
 
-    public String verifyOtp(String email, String otp) {
+    @Override
+    public String verifyOtp(VerifyDTO verifyDTO) {
 
-        String storedOtp = otpService.getOtp(email);
+        String storedOtp = otpService.getOtp(verifyDTO.getEmail());
 
-        //Kiểm tra OTP
-//        if (storedOtp == null || !storedOtp.equals(otp)) {
-//            throw new RuntimeException("OTP không đúng");
-//        }
+        System.out.println("TempUserStorage: " + tempUserStorage.get(verifyDTO.getEmail()));
 
-        System.out.println("TempUserStorage: " + tempUserStorage.get(email));
-
-        if(storedOtp == null || !storedOtp.equals(otp)){
+        //Kiểm tra otp
+        if(storedOtp == null || !storedOtp.equals(verifyDTO.getOtp())){
             throw new RuntimeException("OTP không đúng");
         }
 
-        RegisterDTO tempUser = tempUserStorage.get(email);
+        RegisterDTO tempUser = tempUserStorage.get(verifyDTO.getEmail());
 
-        // Kiểm tra
+        // Kiểm tra xem còn lưu trong cái map ko
         if (tempUser == null) {
             throw new RuntimeException("Không tìm thấy dữ liệu");
         }
@@ -122,8 +121,8 @@ public class AuthenticationServicesImp implements AuthenticationServices {
         userRepository.save(user);
 
         // Xóa OTP + dữ liệu tạm
-        otpService.removeOtp(email);
-        tempUserStorage.remove(email);
+        otpService.removeOtp(verifyDTO.getEmail());
+        tempUserStorage.remove(verifyDTO.getEmail());
 
         return "Đăng ký thành công";
     }
