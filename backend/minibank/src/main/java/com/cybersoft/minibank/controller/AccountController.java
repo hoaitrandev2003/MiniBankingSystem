@@ -1,5 +1,6 @@
 package com.cybersoft.minibank.controller;
 
+import com.cybersoft.minibank.dto.TransferRequestDTO;
 import com.cybersoft.minibank.service.BankAccountService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -30,13 +31,11 @@ public class AccountController {
     }
 
     //Chuyen tien
-
     @PostMapping("/transfer")
     public ResponseEntity<?> transfer(@RequestBody TransferRequestDTO request) {
         try {
             bankAccountService.transferMoney(request);
             return ResponseEntity.ok("Chuyển tiền thành công"); // 200
-
 
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage()); // Trả lỗi có đinh nghĩa

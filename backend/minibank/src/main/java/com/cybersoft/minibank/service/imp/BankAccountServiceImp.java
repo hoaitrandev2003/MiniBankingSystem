@@ -1,5 +1,6 @@
 package com.cybersoft.minibank.service.imp;
 
+import com.cybersoft.minibank.dto.TransferRequestDTO;
 import com.cybersoft.minibank.entity.BankAccountEntity;
 import com.cybersoft.minibank.entity.TransactionEntity;
 import com.cybersoft.minibank.repository.BankAccountRepository;
@@ -56,5 +57,58 @@ public class BankAccountServiceImp implements BankAccountService {
         BankAccountEntity account = accountRepository.findByAccountNumber(accountNumber)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy tài khoản"));
         return account.getBalance() ;
+    }
+
+    @Override
+    @Transactional
+    public void transferMoney(TransferRequestDTO request){
+        // 1. Tìm tài khoản
+        BankAccountEntity fromAccount = accountRepository.findByAccountNumber(String.valueOf(request.getFromId()))
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy người gửi: " + request.getFromId()));
+
+        BankAccountEntity toAccount = accountRepository.findByAccountNumber(String.valueOf(request.getToId()))
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy người nhận: " + request.getToId()));
+
+        // Lấy số tiền cần chuyển
+        double transferAmount = request.getAmount().doubleValue();
+
+        // 2. Kiểm tra số dư (Dùng toán tử so sánh < bình thường cho double)
+        if (fromAccount.getBalance() < transferAmount) {
+            throw new RuntimeException("Số dư không đủ để thực hiện giao dịch!");
+        }
+
+        // 3. Thực hiện chuyển tiền
+        fromAccount.setBalance(fromAccount.getBalance() - transferAmount);
+        toAccount.setBalance(toAccount.getBalance() + transferAmount);
+
+        accountRepository.save(fromAccount);
+        accountRepository.save(toAccount);
+
+        // 4. Lưu giao dịch (Dùng TransactionEntity theo chuẩn mới của Lead)
+        TransactionEntity tx = new TransactionEntity();
+        tx.setFromAccount(fromAccount); // Thường Lead sẽ để quan hệ Object thay vì Id
+        tx.setToAccount(toAccount);
+        tx.setAmount(Double.valueOf(transferAmount)); // Nếu bảng Transaction dùng BigDecimal
+        tx.setCreatedAt(LocalDateTime.now());
+        tx.setStatus("SUCCESS");
+
+        transactionRepository.save(tx);
+    }
+
+    private String generateUniqueAccountNumber() {
+        String accountNumber;
+        boolean exists;
+
+        do {
+            // Tạo chuỗi 10 số ngẫu nhiên
+            long number = (long) (Math.random() * 9_000_000_000L) + 1_000_000_000L;
+            accountNumber = String.valueOf(number);
+
+            // Kiểm tra xem số này đã có trong database chưa
+            exists = accountRepository.existsByAccountNumber(accountNumber);
+
+        } while (exists); // Nếu trùng thì lặp lại để lấy số khác
+
+        return accountNumber;
     }
 }
