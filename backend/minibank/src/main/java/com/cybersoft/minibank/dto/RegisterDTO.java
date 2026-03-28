@@ -1,6 +1,8 @@
 package com.cybersoft.minibank.dto;
 
 import com.cybersoft.minibank.entity.RoleEntity;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import lombok.Getter;
 import lombok.Setter;
 

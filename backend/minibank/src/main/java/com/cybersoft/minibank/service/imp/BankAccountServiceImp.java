@@ -63,11 +63,11 @@ public class BankAccountServiceImp implements BankAccountService {
     @Transactional
     public void transferMoney(TransferRequestDTO request){
         // 1. Tìm tài khoản
-        BankAccountEntity fromAccount = accountRepository.findByAccountNumber(String.valueOf(request.getFromId()))
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy người gửi: " + request.getFromId()));
+        BankAccountEntity fromAccount = accountRepository.findByAccountNumber(String.valueOf(request.getFromAccountNumber()))
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy người gửi: " + request.getFromAccountNumber()));
 
-        BankAccountEntity toAccount = accountRepository.findByAccountNumber(String.valueOf(request.getToId()))
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy người nhận: " + request.getToId()));
+        BankAccountEntity toAccount = accountRepository.findByAccountNumber(String.valueOf(request.getToAccountNumber()))
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy người nhận: " + request.getToAccountNumber()));
 
         // Lấy số tiền cần chuyển
         double transferAmount = request.getAmount().doubleValue();
