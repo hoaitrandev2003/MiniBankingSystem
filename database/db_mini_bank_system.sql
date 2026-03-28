@@ -9,7 +9,6 @@ CREATE TABLE roles (
 
 CREATE TABLE users (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    username VARCHAR(100) NOT NULL,
     email VARCHAR(150) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
     full_name VARCHAR(150),
@@ -20,7 +19,7 @@ CREATE TABLE users (
     address VARCHAR(255),
     failed_login_attempt INT DEFAULT 0,
     status VARCHAR(20) DEFAULT 'ACTIVE',
-    role_id INT,
+    role_id INT DEFAULT 1,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
