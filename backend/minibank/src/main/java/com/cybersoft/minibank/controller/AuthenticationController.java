@@ -19,7 +19,7 @@ public class AuthenticationController {
 
     //Đăng nhập
     @PostMapping("/sign-in")
-    public ResponseEntity<?> signIn(@RequestParam String username, @RequestParam String password){
+    public ResponseEntity<?> signIn(@RequestBody String username, @RequestBody String password){
         LoginDTO result = authenticationServices.login(username, password);
         return ResponseEntity.ok(result);
     }
