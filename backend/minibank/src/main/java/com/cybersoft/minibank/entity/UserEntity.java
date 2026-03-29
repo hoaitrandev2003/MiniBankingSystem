@@ -1,5 +1,6 @@
 package com.cybersoft.minibank.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -8,6 +9,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Setter
@@ -48,6 +50,10 @@ public class UserEntity {
 
     @Column(length = 20)
     private String status = "ACTIVE";
+
+    @OneToMany(mappedBy =  "userEntity")
+    @JsonManagedReference
+    private List<BankAccountEntity> bankAccountEntities;
 
     @ManyToOne
     @JoinColumn(name = "role_id")
