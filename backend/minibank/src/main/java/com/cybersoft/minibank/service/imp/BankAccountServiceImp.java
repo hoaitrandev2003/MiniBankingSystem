@@ -1,5 +1,6 @@
 package com.cybersoft.minibank.service.imp;
 
+import com.cybersoft.minibank.dto.TransferRequestDTO;
 import com.cybersoft.minibank.entity.BankAccountEntity;
 import com.cybersoft.minibank.entity.TransactionEntity;
 import com.cybersoft.minibank.repository.BankAccountRepository;
@@ -50,33 +51,64 @@ public class BankAccountServiceImp implements BankAccountService {
         return "Nạp tiền thành công. Số dư hiện tại: " + newBalance;
     }
 
-    //Tạo tài khoản
-//    @Override
-//    @Transactional
-//    public String createAccount(int userId, String accountType) {
-//        // 1. Kiểm tra User tồn tại
-//        if (!userRepository.existsById(userId)) {
-//            return "Người dùng không tồn tại";
-//        }
-//
-//        // 2. Sinh số tài khoản ngẫu nhiên (Ví dụ 10 chữ số)
-//        String newAccountNumber = "VNB" + (long) (Math.random() * 10000000000L);
-//
-//        // 3. Khởi tạo thực thể
-//        BankAccountEntity newAccount = new BankAccountEntity();
-//        newAccount.setAccountNumber(newAccountNumber);
-//        newAccount.setAccountType(accountType);
-//        newAccount.setBalance(0.0);
-//        newAccount.setCurrency("VND");
-//        newAccount.setStatus("ACTIVE");
-//        newAccount.setCreatedAt(LocalDateTime.now());
-//        // Giả sử bạn có trường user trong BankAccountEntity để liên kết
-//        // newAccount.setUser(userRepository.findById(userId).get());
-//
-//        accountRepository.save(newAccount);
-//        return "Tạo tài khoản thành công: " + newAccountNumber;
-//    }
+    //Lấy số dư
+    @Override
+    public double getAccountBalance(String accountNumber) {
+        BankAccountEntity account = accountRepository.findByAccountNumber(accountNumber)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy tài khoản"));
+        return account.getBalance() ;
+    }
 
+    @Override
+    @Transactional
+    public void transferMoney(TransferRequestDTO request){
+        // 1. Tìm tài khoản
+        BankAccountEntity fromAccount = accountRepository.findByAccountNumber(String.valueOf(request.getFromAccountNumber()))
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy người gửi: " + request.getFromAccountNumber()));
 
+        BankAccountEntity toAccount = accountRepository.findByAccountNumber(String.valueOf(request.getToAccountNumber()))
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy người nhận: " + request.getToAccountNumber()));
 
+        // Lấy số tiền cần chuyển
+        double transferAmount = request.getAmount().doubleValue();
+
+        // 2. Kiểm tra số dư (Dùng toán tử so sánh < bình thường cho double)
+        if (fromAccount.getBalance() < transferAmount) {
+            throw new RuntimeException("Số dư không đủ để thực hiện giao dịch!");
+        }
+
+        // 3. Thực hiện chuyển tiền
+        fromAccount.setBalance(fromAccount.getBalance() - transferAmount);
+        toAccount.setBalance(toAccount.getBalance() + transferAmount);
+
+        accountRepository.save(fromAccount);
+        accountRepository.save(toAccount);
+
+        // 4. Lưu giao dịch (Dùng TransactionEntity theo chuẩn mới của Lead)
+        TransactionEntity tx = new TransactionEntity();
+        tx.setFromAccount(fromAccount); // Thường Lead sẽ để quan hệ Object thay vì Id
+        tx.setToAccount(toAccount);
+        tx.setAmount(Double.valueOf(transferAmount)); // Nếu bảng Transaction dùng BigDecimal
+        tx.setCreatedAt(LocalDateTime.now());
+        tx.setStatus("SUCCESS");
+
+        transactionRepository.save(tx);
+    }
+
+    private String generateUniqueAccountNumber() {
+        String accountNumber;
+        boolean exists;
+
+        do {
+            // Tạo chuỗi 10 số ngẫu nhiên
+            long number = (long) (Math.random() * 9_000_000_000L) + 1_000_000_000L;
+            accountNumber = String.valueOf(number);
+
+            // Kiểm tra xem số này đã có trong database chưa
+            exists = accountRepository.existsByAccountNumber(accountNumber);
+
+        } while (exists); // Nếu trùng thì lặp lại để lấy số khác
+
+        return accountNumber;
+    }
 }

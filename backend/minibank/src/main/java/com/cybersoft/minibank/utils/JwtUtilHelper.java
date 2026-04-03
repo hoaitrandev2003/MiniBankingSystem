@@ -1,5 +1,6 @@
 package com.cybersoft.minibank.utils;
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -8,6 +9,7 @@ import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
+import java.util.function.Function;
 
 @Component
 public class JwtUtilHelper {
@@ -26,4 +28,38 @@ public class JwtUtilHelper {
         String jws = Jwts.builder().subject(data).expiration(expiryDate).signWith(key).compact();
         return jws;
     }
+
+    // Giải mã token
+    public String decodeToken(String data) {
+        SecretKey key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(secretKey));
+
+        return Jwts.parser()
+                .verifyWith(key)
+                .build()
+                .parseClaimsJws(data)
+                .getPayload()
+                .getSubject();
+    }
+
+    // Lấy expiration
+    public Date extractExpiration(String token) {
+        return extractClaim(token, Claims::getExpiration);
+    }
+    // Generic lấy claim
+    public <T> T extractClaim(String token, Function<Claims, T> resolver) {
+        SecretKey key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(secretKey));
+        final Claims claims = Jwts.parser()
+                .verifyWith(key)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+
+        return resolver.apply(claims);
+    }
+
+    // Kiểm tra token hết hạn chưa
+    public boolean isTokenExpired(String token) {
+        return extractExpiration(token).before(new Date());
+    }
+
 }
