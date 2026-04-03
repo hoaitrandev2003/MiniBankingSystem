@@ -7,6 +7,8 @@ import lombok.*;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class LoginRespone {
-    private String token;
+public class BaseResponse {
+    private int code = 200;
+    private String message;
+    private Object data;
 }

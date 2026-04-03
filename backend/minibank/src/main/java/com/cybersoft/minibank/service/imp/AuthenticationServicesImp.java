@@ -1,10 +1,13 @@
 package com.cybersoft.minibank.service.imp;
 
 import com.cybersoft.minibank.dto.RegisterDTO;
+import com.cybersoft.minibank.dto.UserDTO;
 import com.cybersoft.minibank.dto.VerifyDTO;
 import com.cybersoft.minibank.entity.UserEntity;
+import com.cybersoft.minibank.exception.InvalidUserException;
+import com.cybersoft.minibank.mapper.UserMapper;
 import com.cybersoft.minibank.payload.request.LoginRequest;
-import com.cybersoft.minibank.payload.response.LoginRespone;
+import com.cybersoft.minibank.payload.response.BaseResponse;
 import com.cybersoft.minibank.repository.UserRepository;
 import com.cybersoft.minibank.service.AuthenticationServices;
 import com.cybersoft.minibank.service.EmailService;
@@ -40,23 +43,21 @@ public class AuthenticationServicesImp implements AuthenticationServices {
     @Autowired
     private OtpService otpService;
 
-    private LoginRespone loginRespone = new LoginRespone();
+    private BaseResponse baseResponse = new BaseResponse();
 
     private Map<String, RegisterDTO> tempUserStorage = new HashMap<>();
 
     @Override
-    public LoginRespone login(LoginRequest loginRequest) {
-        //Kiểm tra xem có trong database hay không
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword())
-        );
-
-        UserEntity user = userRepository.findByUserName(loginRequest.getUsername());
-
-        String jwt = jwtHelper.generateToken(loginRequest.getUsername());
-
-        loginRespone.setToken(jwt);
-        return loginRespone;
+    public UserDTO login(LoginRequest loginRequest) {
+        UserEntity user = userRepository.findByUserName(loginRequest.getUsername())
+                .orElseThrow(()-> {
+                    throw new InvalidUserException("Không tìm thấy Người dùng");
+                });
+        if(passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())){
+            return UserMapper.mapDTO(user);
+        }else {
+            throw new InvalidUserException("Đăng nhập thất bại");
+        }
     }
 
     public String generateOtp() {
