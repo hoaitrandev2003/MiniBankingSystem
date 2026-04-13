@@ -13,4 +13,22 @@ public class CentralException {
         baseResponse.setCode(401);
         return ResponseEntity.ok(baseResponse);
     }
+
+    @ExceptionHandler(exception = InvalidNotValueUserException.class)
+    public ResponseEntity<?>  handleException(InvalidNotValueUserException exception) {
+        BaseResponse baseResponse = new BaseResponse();
+        baseResponse.setMessage(exception.getMessage());
+        baseResponse.setCode(500);
+        return ResponseEntity.ok(baseResponse);
+    }
+
+    // Ném lỗi cho User Register
+    @ExceptionHandler(exception = InvalidUserRegisterException.class)
+    public ResponseEntity<?>  handleException(InvalidUserRegisterException invalidUserRegisterException) {
+        BaseResponse baseResponse = new BaseResponse();
+        baseResponse.setMessage(invalidUserRegisterException.getMessage());
+        baseResponse.setCode(401);
+        return ResponseEntity.ok(baseResponse);
+    }
+
 }

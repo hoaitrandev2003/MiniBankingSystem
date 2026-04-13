@@ -48,6 +48,9 @@ public class UserEntity {
     @Column(name = "failed_login_attempt")
     private int failedLoginAttempt = 0;
 
+    @Column(name = "lock_count")
+    private int lockCount = 0;
+
     @Column(length = 20)
     private String status = "ACTIVE";
 
@@ -66,4 +69,7 @@ public class UserEntity {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @OneToMany(mappedBy = "user")
+    private List<RefreshTokenEntity> refreshTokens;
 }
