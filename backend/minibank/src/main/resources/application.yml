@@ -15,11 +15,27 @@ spring:
       mail.smtp.auth: true
       mail.smtp.starttls.enable: true
       mail.debug: true
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    consumer:
+      group-id: minibank-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      auto-offset-reset: earliest
 logging:
   level:
+    com.cybersoft.minibank: DEBUG
+    org.springframework.kafka: INFO
     org.springframework.mail: INFO
     jakarta.mail: INFO
 server:
   port: 8080
 jwt:
   key: XykIIDx7IrNXR8k19vju963FvJpQp1FPmAqZRMj6Ups=
+
+# Trong docker chạy cái lệnh này cài redis
+# docker run -d --name redis-server -p 6379:6379 redis
+#Cursor,antigravity

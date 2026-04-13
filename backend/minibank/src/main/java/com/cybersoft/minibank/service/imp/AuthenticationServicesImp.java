@@ -1,24 +1,31 @@
 package com.cybersoft.minibank.service.imp;
 
+import com.cybersoft.minibank.dto.LogInDTO;
 import com.cybersoft.minibank.dto.RegisterDTO;
 import com.cybersoft.minibank.dto.UserDTO;
-import com.cybersoft.minibank.dto.VerifyDTO;
+import com.cybersoft.minibank.entity.RoleEntity;
 import com.cybersoft.minibank.entity.UserEntity;
+import com.cybersoft.minibank.exception.InvalidNotValueUserException;
 import com.cybersoft.minibank.exception.InvalidUserException;
+import com.cybersoft.minibank.exception.InvalidUserRegisterException;
 import com.cybersoft.minibank.mapper.UserMapper;
 import com.cybersoft.minibank.payload.request.LoginRequest;
-import com.cybersoft.minibank.payload.response.BaseResponse;
+import com.cybersoft.minibank.payload.request.RegisterRequest;
+import com.cybersoft.minibank.repository.RoleRepostitory;
 import com.cybersoft.minibank.repository.UserRepository;
 import com.cybersoft.minibank.service.AuthenticationServices;
 import com.cybersoft.minibank.service.EmailService;
-import com.cybersoft.minibank.service.OtpService;
+import com.cybersoft.minibank.service.RedisService;
+import com.cybersoft.minibank.service.RefreshTokenService;
 import com.cybersoft.minibank.utils.JwtUtilHelper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import tools.jackson.databind.ObjectMapper;
 
+import java.security.SecureRandom;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -27,6 +34,9 @@ public class AuthenticationServicesImp implements AuthenticationServices {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private RefreshTokenService refreshTokenService;
 
     @Autowired
     private JwtUtilHelper jwtHelper;
@@ -41,90 +51,143 @@ public class AuthenticationServicesImp implements AuthenticationServices {
     private EmailService emailService;
 
     @Autowired
-    private OtpService otpService;
+    private RedisService redisService;
 
-    private BaseResponse baseResponse = new BaseResponse();
+    @Autowired
+    private RoleRepostitory roleRepostitory;
+
+    @Autowired
+    private KafkaTemplate <String, String> kafkaTemplate;
 
     private Map<String, RegisterDTO> tempUserStorage = new HashMap<>();
 
     @Override
-    public UserDTO login(LoginRequest loginRequest) {
+    public LogInDTO login(LoginRequest loginRequest) {
         UserEntity user = userRepository.findByUserName(loginRequest.getUsername())
-                .orElseThrow(()-> {
-                    throw new InvalidUserException("Không tìm thấy Người dùng");
-                });
-        if(passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())){
-            return UserMapper.mapDTO(user);
-        }else {
-            throw new InvalidUserException("Đăng nhập thất bại");
-        }
-    }
+                .orElseThrow(() -> new InvalidUserException("Không tìm thấy Người dùng"));
 
-    public String generateOtp() {
-        return String.valueOf((int)(Math.random() * 900000) + 100000);
-    }
-
-    @Override
-    public String register(RegisterDTO registerDTO) {
-
-        UserEntity existingUser = userRepository.findByEmail(registerDTO.getEmail());
-        if(existingUser != null){
-           return "Email đã tồn tại";
+        // check khóa vĩnh viễn
+        if (user.getStatus().equals("LOCKED")) {
+            throw new InvalidUserException("Tài khoản đã bị khóa vĩnh viễn");
         }
 
-        // Tạo OTP
-        String otp = generateOtp();
-        otpService.saveOtp(registerDTO.getEmail(), otp);  // Lưu OTP đúng email
+        String lockKey = "LOCK:" + user.getEmail();
 
-        // Gửi mail
-        String result = emailService.sendSimpleMail(registerDTO.getEmail(), otp);
-        if(result.equals("ERROR")){
-            throw new RuntimeException("Gửi mail thất bại");
+        // check lock Redis
+        if (redisService.isLocked(lockKey)) {
+            throw new InvalidUserException("Tài khoản bị khóa 15 phút");
         }
 
-        // Lưu tạm user
-        RegisterDTO tempUser = new RegisterDTO();
-        tempUser.setUsername(registerDTO.getUsername());
-        tempUser.setEmail(registerDTO.getEmail());
-        tempUser.setPassword(registerDTO.getPassword());
-        tempUserStorage.put(registerDTO.getEmail(), tempUser);
-        System.out.println("TempUserStorage: " + tempUserStorage.get(registerDTO.getEmail()));
+        // check password
+        if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
 
-        return "OTP đã được gửi về email";
-    }
+            int attempts = user.getFailedLoginAttempt() + 1;
+            user.setFailedLoginAttempt(attempts);
 
-    @Override
-    public String verifyOtp(VerifyDTO verifyDTO) {
+            if (attempts >= 3) {
+                redisService.setLock(lockKey, 15);
 
-        String storedOtp = otpService.getOtp(verifyDTO.getEmail());
+                user.setFailedLoginAttempt(0);
 
-        System.out.println("TempUserStorage: " + tempUserStorage.get(verifyDTO.getEmail()));
+                int lockCount = user.getLockCount() + 1;
+                user.setLockCount(lockCount);
 
-        //Kiểm tra otp
-        if(storedOtp == null || !storedOtp.equals(verifyDTO.getOtp())){
-            throw new RuntimeException("OTP không đúng");
+                if (lockCount >= 3) {
+                    user.setStatus("LOCKED");
+                }
+            }
+
+            userRepository.save(user);
+            throw new InvalidUserException("Sai mật khẩu");
         }
 
-        RegisterDTO tempUser = tempUserStorage.get(verifyDTO.getEmail());
-
-        // Kiểm tra xem còn lưu trong cái map ko
-        if (tempUser == null) {
-            throw new RuntimeException("Không tìm thấy dữ liệu");
-        }
-
-        // Thêm user vào database
-        UserEntity user = new UserEntity();
-        user.setEmail(tempUser.getEmail());
-        user.setUserName(tempUser.getUsername());
-        user.setPassword(passwordEncoder.encode(tempUser.getPassword()));
-
+        // reset khi login thành công
+        user.setFailedLoginAttempt(0);
+        user.setLockCount(0);
         userRepository.save(user);
 
-        // Xóa OTP + dữ liệu tạm
-        otpService.removeOtp(verifyDTO.getEmail());
-        tempUserStorage.remove(verifyDTO.getEmail());
+        UserDTO userDTO = UserMapper.mapDTO(user);
 
-        return "Đăng ký thành công";
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            String data = objectMapper.writeValueAsString(userDTO);
+
+            String refreshToken = refreshTokenService.createRefreshToken(user.getUserName());
+            String accessToken = jwtHelper.generateToken(data);
+
+            return new LogInDTO(accessToken,refreshToken);
+        } catch (Exception e) {
+            throw new InvalidNotValueUserException("Lỗi tạo token");
+        }
+    }
+
+    @Override
+    public String register(RegisterRequest registerRequest) {
+        // Kiểm tra trùng email
+        if(userRepository.findByEmail(registerRequest.getEmail()) != null) {
+            throw new InvalidUserRegisterException( "Email đã tồn tại");
+        }if (userRepository.existsByUsername(registerRequest.getUsername())) {
+            throw new InvalidUserRegisterException("Username đã tồn tại");
+        }
+
+        // Sinh mã 8 ký tự (Chữ + Số)
+        String randomCode = generateRandomAlphaNumeric(8);
+        RegisterDTO registerDTO = new RegisterDTO();
+        registerDTO.setEmail(registerRequest.getEmail());
+        registerDTO.setUsername(registerRequest.getUsername());
+        registerDTO.setPassword(randomCode);
+
+        // Lưu vào bộ nhớ tạm
+        tempUserStorage.put(registerDTO.getEmail(), registerDTO);
+
+        //Gửi tin nhắn sang Kafka (Để Service Mail tự lo việc gửi)
+        Map<String, String> emailData = new HashMap<>();
+        emailData.put("email", registerRequest.getEmail());
+        emailData.put("password", randomCode);
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        String jsonPayload = objectMapper.writeValueAsString(emailData);
+        kafkaTemplate.send("password-mail-topic", jsonPayload);
+
+        return "Mã xác thực đã được gửi!";
+    }
+
+    @Override
+    public String verifyPassword(String email, String userInputOtp) {
+        // "Gọi" dữ liệu từ Map ra dựa trên email
+        RegisterDTO tempUser = tempUserStorage.get(email);
+
+        if (tempUser == null) throw new InvalidUserRegisterException("Yêu cầu không tồn tại hoặc đã quá hạn");
+
+        // So khớp mã khách nhập và mã mình đã lưu lúc nãy
+        if (tempUser.getPassword().equals(userInputOtp)) {
+            // Lưu chính thức vào Database
+            UserEntity user = new UserEntity();
+            user.setUserName(tempUser.getUsername());
+            user.setEmail(tempUser.getEmail());
+            user.setPassword(passwordEncoder.encode(tempUser.getPassword()));
+
+            RoleEntity defaultRole = roleRepostitory.findByName("ROLE_USER")
+                    .orElseThrow(() -> new InvalidUserRegisterException("Lỗi: Không tìm thấy Role mặc định trong hệ thống"));
+            user.setRoleEntity(defaultRole);
+            userRepository.save(user);
+
+            // Xóa khỏi bộ nhớ tạm
+            tempUserStorage.remove(email);
+            return "Đăng ký thành công!";
+        }
+        // Ném lỗi sai mã xác thực
+        throw new InvalidUserRegisterException("Mã xác thực sai!");
+    }
+
+    private String generateRandomAlphaNumeric(int length) {
+        String charSet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        SecureRandom random = new SecureRandom();
+        StringBuilder sb = new StringBuilder(length);
+        for (int i = 0; i < length; i++) {
+            sb.append(charSet.charAt(random.nextInt(charSet.length())));
+        }
+        return sb.toString();
     }
 
 }

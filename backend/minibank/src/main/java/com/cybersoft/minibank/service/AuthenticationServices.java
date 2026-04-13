@@ -1,13 +1,12 @@
 package com.cybersoft.minibank.service;
 
+import com.cybersoft.minibank.dto.LogInDTO;
 import com.cybersoft.minibank.dto.RegisterDTO;
-import com.cybersoft.minibank.dto.UserDTO;
-import com.cybersoft.minibank.dto.VerifyDTO;
 import com.cybersoft.minibank.payload.request.LoginRequest;
-import com.cybersoft.minibank.payload.response.BaseResponse;
+import com.cybersoft.minibank.payload.request.RegisterRequest;
 
 public interface AuthenticationServices {
-    UserDTO login(LoginRequest loginRequest);
-    String register(RegisterDTO registerDTO);
-    String verifyOtp(VerifyDTO verifyDTO);
+    LogInDTO login(LoginRequest loginRequest);
+    String register(RegisterRequest registerRequest);
+    String verifyPassword(String email, String userInputOtp);
 }
