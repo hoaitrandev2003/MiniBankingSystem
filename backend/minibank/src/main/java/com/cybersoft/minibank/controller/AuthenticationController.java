@@ -1,7 +1,7 @@
 package com.cybersoft.minibank.controller;
 
 import com.cybersoft.minibank.dto.LogInDTO;
-import com.cybersoft.minibank.dto.RegisterDTO;
+import com.cybersoft.minibank.payload.request.UpdatePasswordRequest;
 import com.cybersoft.minibank.payload.request.LoginRequest;
 import com.cybersoft.minibank.payload.request.RegisterRequest;
 import com.cybersoft.minibank.payload.request.VerifyRequest;
@@ -55,8 +55,18 @@ public class AuthenticationController {
     @PostMapping("/verify")
     public ResponseEntity<?> verifyPassword(@RequestBody VerifyRequest verifyRequest) {
         // Gọi hàm verify trong ServiceImp mà bạn vừa viết
-        String result = authenticationServices.verifyPassword(verifyRequest.getEmail(), verifyRequest.getOtp());
-        return ResponseEntity.ok(result);
+        String result = authenticationServices.verifyPassword(verifyRequest.getEmail(), verifyRequest.getPassword());
+        BaseResponse baseResponse = new BaseResponse();
+        baseResponse.setMessage(result);
+
+        return ResponseEntity.ok(baseResponse);
     }
 
+    @PostMapping("/update")
+    public ResponseEntity<?> updatePassword(@RequestBody UpdatePasswordRequest updatePasswordRequest) {
+        String result = authenticationServices.updatePassword(updatePasswordRequest);
+        BaseResponse baseResponse = new BaseResponse();
+        baseResponse.setMessage(result);
+        return ResponseEntity.ok(baseResponse);
+    }
 }
