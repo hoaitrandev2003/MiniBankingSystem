@@ -35,6 +35,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
         if(authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
             String decodeToken = jwtHelper.decodeToken(token);
+            System.out.println("user decode token" + decodeToken);
             if(decodeToken != null) {
 
                 //Chuyển kiểu chuỗi thành object
@@ -50,7 +51,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 
                 // Sinh ra cái thẻ
                 UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken("", "", List.of());
+                        new UsernamePasswordAuthenticationToken(user.getUsername(), "", List.of());
 
                 // Đóng mộc cho cái thẻ
                 SecurityContext  securityContext = SecurityContextHolder.getContext();
