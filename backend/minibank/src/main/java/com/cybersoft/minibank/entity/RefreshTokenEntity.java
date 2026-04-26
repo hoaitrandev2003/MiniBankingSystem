@@ -27,8 +27,7 @@ public class RefreshTokenEntity {
     @Column(name = "device_id")
     private String deviceId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "user_id")
-    @JsonIgnore
     private UserEntity user;
 }

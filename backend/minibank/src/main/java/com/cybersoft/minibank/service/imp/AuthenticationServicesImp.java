@@ -9,9 +9,11 @@ import com.cybersoft.minibank.exception.InvalidNotValueUserException;
 import com.cybersoft.minibank.exception.InvalidUserException;
 import com.cybersoft.minibank.exception.InvalidUserRegisterException;
 import com.cybersoft.minibank.mapper.UserMapper;
-import com.cybersoft.minibank.payload.request.UpdatePasswordRequest;
 import com.cybersoft.minibank.payload.request.LoginRequest;
+import com.cybersoft.minibank.payload.request.LogoutRequest;
 import com.cybersoft.minibank.payload.request.RegisterRequest;
+import com.cybersoft.minibank.payload.request.VerifyRequest;
+import com.cybersoft.minibank.repository.RefreshTokenRepository;
 import com.cybersoft.minibank.repository.RoleRepostitory;
 import com.cybersoft.minibank.repository.UserRepository;
 import com.cybersoft.minibank.service.AuthenticationServices;
@@ -19,16 +21,18 @@ import com.cybersoft.minibank.service.EmailService;
 import com.cybersoft.minibank.service.RedisService;
 import com.cybersoft.minibank.service.RefreshTokenService;
 import com.cybersoft.minibank.utils.JwtUtilHelper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import tools.jackson.databind.ObjectMapper;
+
 
 import java.security.SecureRandom;
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -58,6 +62,8 @@ public class AuthenticationServicesImp implements AuthenticationServices {
 
     @Autowired
     private RoleRepostitory roleRepostitory;
+    @Autowired
+    private RefreshTokenRepository refreshTokenRepository;
 
     @Autowired
     private KafkaTemplate <String, String> kafkaTemplate;
@@ -111,7 +117,7 @@ public class AuthenticationServicesImp implements AuthenticationServices {
         userRepository.save(user);
 
         UserDTO userDTO = UserMapper.mapDTO(user);
-
+        userDTO.setUsername(loginRequest.getUsername());
         try {
             ObjectMapper objectMapper = new ObjectMapper();
             String data = objectMapper.writeValueAsString(userDTO);
@@ -131,19 +137,15 @@ public class AuthenticationServicesImp implements AuthenticationServices {
         // Kiểm tra trùng email
         if(userRepository.findByEmail(registerRequest.getEmail()) != null) {
             throw new InvalidUserRegisterException( "Email đã tồn tại");
-        }if (userRepository.existsByUserName(registerRequest.getUserName())) {
-            throw new InvalidUserRegisterException("Username đã tồn tại");
-        }if (redisService.isLocked("LOCK_REG:" + registerRequest.getEmail())) {
-            throw new InvalidUserRegisterException("Vui lòng đợi 5 phút trước khi yêu cầu mã mới");
-        }if (!registerRequest.getUserName().matches(COMMON_PATTERN)) {
-            throw new InvalidUserException("UserName ko hợp lệ! Phải bao gồm chữ hoa, chữ thường, số, ký tự đặc biệt và ít nhất 8 ký tự.");
         }
+//        if (redisService.isLocked("LOCK_REG:" + registerRequest.getEmail())) {
+//            throw new InvalidUserRegisterException("Vui lòng đợi 5 phút trước khi yêu cầu mã mới");
+//        }
 
         // Sinh mã 8 ký tự (Chữ + Số)
         String randomCode = generateRandomAlphaNumeric(8);
         RegisterDTO registerDTO = new RegisterDTO();
         registerDTO.setEmail(registerRequest.getEmail());
-        registerDTO.setUsername(registerRequest.getUserName());
         registerDTO.setPassword(randomCode);
         registerDTO.setFullName(registerRequest.getFullName());
         registerDTO.setGender(registerRequest.getGender());
@@ -183,9 +185,9 @@ public class AuthenticationServicesImp implements AuthenticationServices {
     // Xac thuc dang ky
     @Transactional
     @Override
-    public String verifyPassword(String email, String userInputOtp) {
+    public String verifyPassword(VerifyRequest verifyRequest) {
         // "Gọi" dữ liệu từ Map ra dựa trên email
-        String jsonData = redisService.get("TEMP_USER:" + email);
+        String jsonData = redisService.get("TEMP_USER:" + verifyRequest.getEmail());
 
         // Nếu Redis tự xóa sau 5 phút, jsonData sẽ null
         if (jsonData == null) {
@@ -193,15 +195,16 @@ public class AuthenticationServicesImp implements AuthenticationServices {
         }
         try {
             ObjectMapper mapper = new ObjectMapper();
+
             RegisterDTO tempUser = mapper.readValue(jsonData, RegisterDTO.class);
 
             // So khớp mã khách nhập và mã mình đã lưu lúc nãy
-            if (tempUser.getPassword().equals(userInputOtp)) {
+            if (tempUser.getPassword().equals(verifyRequest.getOldPassword())) {
                 // Lưu chính thức vào Database
                 UserEntity user = new UserEntity();
-                user.setUserName(tempUser.getUsername());
+                user.setUserName(verifyRequest.getUserName());
                 user.setEmail(tempUser.getEmail());
-                user.setPassword(passwordEncoder.encode(tempUser.getPassword()));
+                user.setPassword(passwordEncoder.encode(verifyRequest.getNewPassword()));
                 user.setFullName(tempUser.getFullName());
                 user.setGender(tempUser.getGender());
                 user.setPhone(tempUser.getPhone());
@@ -215,8 +218,8 @@ public class AuthenticationServicesImp implements AuthenticationServices {
                 userRepository.save(user);
 
                 // Dọn dẹp Redis
-                redisService.delete("TEMP_USER:" + email);
-                redisService.delete("LOCK_REG:" + email);
+                redisService.delete("TEMP_USER:" + verifyRequest.getEmail());
+                redisService.delete("LOCK_REG:" + verifyRequest.getEmail());
 
                 return "Đăng ký thành công!";
             }
@@ -237,28 +240,30 @@ public class AuthenticationServicesImp implements AuthenticationServices {
         }
         return sb.toString();
     }
-    //
+
     @Override
-    public String updatePassword(UpdatePasswordRequest request) {
-        // 1. Kiểm tra User tồn tại
-        UserEntity user = userRepository.findByUserName(request.getUsername())
-                .orElseThrow(() -> new InvalidUserException("Không tìm thấy user"));
+    @Transactional
+    public String logout() {
+        // 1. Lấy "thẻ" Authentication từ kho lưu trữ của Spring Security
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
-        // 2. Kiểm tra định dạng mật khẩu mới (Regex)
-        if (request.getNewPassword() == null || !request.getNewPassword().matches(COMMON_PATTERN)) {
-            throw new InvalidUserException("Mật khẩu không hợp lệ! Phải bao gồm chữ hoa, chữ thường, số, ký tự đặc biệt và ít nhất 8 ký tự.");
+        // 2. Kiểm tra nếu thẻ tồn tại và đã được xác thực
+        if (auth != null && auth.isAuthenticated()) {
+
+            String username = auth.getName();
+
+            // 3. Tìm UserEntity dựa trên username lấy được
+            UserEntity user = userRepository.findByUserName(username)
+                    .orElseThrow(() -> new RuntimeException("Người dùng không tồn tại trong hệ thống"));
+
+            // 4. Thực hiện xóa Refresh Token theo ID của User
+            refreshTokenRepository.deleteByUserId(user.getId());
+
+            return "Đăng xuất thành công";
         }
 
-        // 3. (Tùy chọn) Kiểm tra bảo mật: Mật khẩu mới không được trùng mật khẩu cũ
-        if (passwordEncoder.matches(request.getNewPassword(), user.getPassword())) {
-            throw new InvalidUserException("Mật khẩu mới không được giống mật khẩu cũ!");
-        }
-
-        // 4. Mã hóa và lưu vào Database
-        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
-        user.setUpdatedAt(LocalDateTime.now());
-        userRepository.save(user);
-
-        return "Đổi mật khẩu thành công";
+        throw new RuntimeException("Không tìm thấy thông tin xác thực");
     }
+
+
 }
