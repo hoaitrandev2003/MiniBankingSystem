@@ -9,6 +9,7 @@ CREATE TABLE roles (
 
 CREATE TABLE users (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(100) NOT NULL,
     email VARCHAR(150) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
     full_name VARCHAR(150),
@@ -18,6 +19,7 @@ CREATE TABLE users (
     identity_number VARCHAR(20),
     address VARCHAR(255),
     failed_login_attempt INT DEFAULT 0,
+    lock_count INT DEFAULT 0,
     status VARCHAR(20) DEFAULT 'ACTIVE',
     role_id INT DEFAULT 1,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -71,11 +73,12 @@ CREATE TABLE transaction_audit_logs (
 CREATE TABLE refresh_tokens (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT,
-    token VARCHAR(255),
+    token VARCHAR(255) ,
     expiry_date TIMESTAMP,
-    revoked BOOLEAN DEFAULT FALSE
+    device_id VARCHAR(255),
+    revoked BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
 
 ALTER TABLE users ADD CONSTRAINT fk_users_role FOREIGN KEY (role_id)REFERENCES roles(id);
 ALTER TABLE bank_accounts ADD CONSTRAINT fk_accounts_user FOREIGN KEY (user_id)REFERENCES users(id);
