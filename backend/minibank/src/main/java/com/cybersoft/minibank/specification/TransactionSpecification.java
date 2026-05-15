@@ -1,17 +1,17 @@
 package com.cybersoft.minibank.specification;
 
-import com.cybersoft.minibank.dto.TransactionDTO;
+import com.cybersoft.minibank.entity.TransactionEntity;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.time.LocalDateTime;
 
 public class TransactionSpecification {
-    public static Specification<TransactionDTO> hasStatus(String status) {
+    public static Specification<TransactionEntity> hasStatus(String status) {
         return (root, query, criteriaBuilder) -> status == null ? null :
                 criteriaBuilder.like(root.get("transactionType"), "%" + status + "%");
     }
 
-    public static Specification<TransactionDTO> dateFilter(LocalDateTime fromDate, LocalDateTime toDate){
+    public static Specification<TransactionEntity> dateFilter(LocalDateTime fromDate, LocalDateTime toDate){
         return (root, query, criteriaBuilder) -> {
             if (fromDate == null && toDate == null) {
                 return null;
@@ -29,7 +29,7 @@ public class TransactionSpecification {
         };
     }
 
-    public static Specification<TransactionDTO> amountFilter(Double fromAmount, Double toAmount){
+    public static Specification<TransactionEntity> amountFilter(Double fromAmount, Double toAmount){
         return (root, query, criteriaBuilder) -> {
             if (fromAmount == null && toAmount == null) {
                 return null;

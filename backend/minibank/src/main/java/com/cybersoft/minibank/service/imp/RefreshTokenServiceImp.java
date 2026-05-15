@@ -6,6 +6,7 @@ import com.cybersoft.minibank.exception.InvalidUserException;
 import com.cybersoft.minibank.repository.RefreshTokenRepository;
 import com.cybersoft.minibank.repository.UserRepository;
 import com.cybersoft.minibank.service.RefreshTokenService;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +26,7 @@ public class RefreshTokenServiceImp implements RefreshTokenService {
     private UserRepository userRepository;
 
     @Override
+    @Transactional
     public String createRefreshToken(String username) {
         UserEntity user = userRepository.findByUserName(username).orElseThrow(InvalidUserException::new);
 

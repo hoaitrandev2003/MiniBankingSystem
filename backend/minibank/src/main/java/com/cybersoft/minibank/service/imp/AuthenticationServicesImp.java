@@ -10,7 +10,6 @@ import com.cybersoft.minibank.exception.InvalidUserException;
 import com.cybersoft.minibank.exception.InvalidUserRegisterException;
 import com.cybersoft.minibank.mapper.UserMapper;
 import com.cybersoft.minibank.payload.request.LoginRequest;
-import com.cybersoft.minibank.payload.request.LogoutRequest;
 import com.cybersoft.minibank.payload.request.RegisterRequest;
 import com.cybersoft.minibank.payload.request.VerifyRequest;
 import com.cybersoft.minibank.repository.RefreshTokenRepository;
@@ -22,6 +21,7 @@ import com.cybersoft.minibank.service.RedisService;
 import com.cybersoft.minibank.service.RefreshTokenService;
 import com.cybersoft.minibank.utils.JwtUtilHelper;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -72,6 +72,7 @@ public class AuthenticationServicesImp implements AuthenticationServices {
     private final String COMMON_PATTERN = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$";
 
     @Override
+    @Transactional
     public LogInDTO login(LoginRequest loginRequest) {
         UserEntity user = userRepository.findByUserName(loginRequest.getUsername())
                 .orElseThrow(() -> new InvalidUserException("Không tìm thấy Người dùng"));
@@ -120,6 +121,7 @@ public class AuthenticationServicesImp implements AuthenticationServices {
         userDTO.setUsername(loginRequest.getUsername());
         try {
             ObjectMapper objectMapper = new ObjectMapper();
+            objectMapper.registerModule(new JavaTimeModule());
             String data = objectMapper.writeValueAsString(userDTO);
 
             String refreshToken = refreshTokenService.createRefreshToken(user.getUserName());
@@ -127,7 +129,8 @@ public class AuthenticationServicesImp implements AuthenticationServices {
 
             return new LogInDTO(accessToken,refreshToken);
         } catch (Exception e) {
-            throw new InvalidNotValueUserException("Lỗi tạo token");
+            e.printStackTrace();
+            throw new InvalidNotValueUserException("Lỗi tạo token: " + e.getMessage());
         }
     }
 
@@ -157,6 +160,7 @@ public class AuthenticationServicesImp implements AuthenticationServices {
         try {
             // Chuyển Object thành String JSON để khớp với RedisService của bạn
             ObjectMapper mapper = new ObjectMapper();
+            mapper.registerModule(new JavaTimeModule());
             String jsonRegisterDTO = mapper.writeValueAsString(registerDTO);
 
             // 4. Lưu dữ liệu tạm và đặt Lock 5 phút
@@ -195,6 +199,7 @@ public class AuthenticationServicesImp implements AuthenticationServices {
         }
         try {
             ObjectMapper mapper = new ObjectMapper();
+            mapper.registerModule(new JavaTimeModule());
 
             RegisterDTO tempUser = mapper.readValue(jsonData, RegisterDTO.class);
 
