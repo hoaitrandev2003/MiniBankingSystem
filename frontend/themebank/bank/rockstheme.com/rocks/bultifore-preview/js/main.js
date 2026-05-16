@@ -39,7 +39,7 @@ windows.on('scroll', function() {
         if (localStorage.getItem('access_token')) {
             var loginLinks = $('a[href="login.html"]');
             loginLinks.each(function() {
-                $(this).html('<img src="img/icon/login.png" alt="">Logout');
+                $(this).html('Logout');
                 $(this).attr('href', '#');
                 $(this).on('click', function(e) {
                     e.preventDefault();
@@ -222,7 +222,7 @@ windows.on('scroll', function() {
         if (localStorage.getItem('access_token')) {
             var loginLink = $('.topbar-right a[href="login.html"]');
             if (loginLink.length) {
-                loginLink.html('<img src="img/icon/login.png" alt="">Logout');
+                loginLink.html('Logout');
                 loginLink.attr('href', '#');
                 loginLink.on('click', function(e) {
                     e.preventDefault();
@@ -240,7 +240,7 @@ windows.on('scroll', function() {
         if (localStorage.getItem('access_token')) {
             var loginLink = $('.topbar-right a[href="login.html"]');
             if (loginLink.length) {
-                loginLink.html('<img src="img/icon/login.png" alt="">Logout');
+                loginLink.html('Logout');
                 loginLink.attr('href', '#');
                 loginLink.on('click', function(e) {
                     e.preventDefault();

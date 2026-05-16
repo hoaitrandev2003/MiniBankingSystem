@@ -69,6 +69,7 @@ public class AuthenticationServicesImp implements AuthenticationServices {
     private final String COMMON_PATTERN = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$";
 
     @Override
+    @Transactional
     public LogInDTO login(LoginRequest loginRequest) {
         UserEntity user = userRepository.findByUserName(loginRequest.getUsername())
                 .orElseThrow(() -> new InvalidUserException("Không tìm thấy Người dùng"));
@@ -117,6 +118,7 @@ public class AuthenticationServicesImp implements AuthenticationServices {
         userDTO.setUsername(loginRequest.getUsername());
         try {
             ObjectMapper objectMapper = new ObjectMapper();
+            objectMapper.registerModule(new JavaTimeModule());
             String data = objectMapper.writeValueAsString(userDTO);
 
             String refreshToken = refreshTokenService.createRefreshToken(user.getUserName());
@@ -124,7 +126,8 @@ public class AuthenticationServicesImp implements AuthenticationServices {
 
             return new LogInDTO(accessToken,refreshToken);
         } catch (Exception e) {
-            throw new InvalidNotValueUserException("Lỗi tạo token");
+            e.printStackTrace();
+            throw new InvalidNotValueUserException("Lỗi tạo token: " + e.getMessage());
         }
     }
 
@@ -187,6 +190,7 @@ public class AuthenticationServicesImp implements AuthenticationServices {
         }
         try {
             ObjectMapper mapper = new ObjectMapper();
+            mapper.registerModule(new JavaTimeModule());
 
             RegisterDTO tempUser = mapper.readValue(jsonData, RegisterDTO.class);
 

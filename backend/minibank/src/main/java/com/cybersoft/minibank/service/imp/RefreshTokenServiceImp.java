@@ -35,6 +35,7 @@ public class RefreshTokenServiceImp implements RefreshTokenService {
     private JwtUtilHelper jwtTokenUtil;
 
     @Override
+    @Transactional
     public String createRefreshToken(String username) {
         UserEntity user = userRepository.findByUserName(username).orElseThrow(InvalidUserException::new);
 
