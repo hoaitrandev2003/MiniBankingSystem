@@ -1,10 +1,7 @@
 package com.cybersoft.minibank.controller;
 
 import com.cybersoft.minibank.dto.LogInDTO;
-import com.cybersoft.minibank.payload.request.LoginRequest;
-import com.cybersoft.minibank.payload.request.LogoutRequest;
-import com.cybersoft.minibank.payload.request.RegisterRequest;
-import com.cybersoft.minibank.payload.request.VerifyRequest;
+import com.cybersoft.minibank.payload.request.*;
 import com.cybersoft.minibank.payload.response.BaseResponse;
 import com.cybersoft.minibank.service.AuthenticationServices;
 import com.cybersoft.minibank.service.EmailService;

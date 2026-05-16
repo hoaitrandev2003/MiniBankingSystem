@@ -31,4 +31,12 @@ public class CentralException {
         return ResponseEntity.ok(baseResponse);
     }
 
+    @ExceptionHandler(exception = InvalidRefreshTokenException.class)
+    public ResponseEntity<?>  handleException(InvalidRefreshTokenException invalidRefreshTokenException) {
+        BaseResponse baseResponse = new BaseResponse();
+        baseResponse.setMessage(invalidRefreshTokenException.getMessage());
+        baseResponse.setCode(401);
+        return ResponseEntity.ok(baseResponse);
+    }
+
 }
