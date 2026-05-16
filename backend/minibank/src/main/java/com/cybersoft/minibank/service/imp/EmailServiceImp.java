@@ -1,14 +1,17 @@
 package com.cybersoft.minibank.service.imp;
 
+import com.cybersoft.minibank.UserCreatedEvent;
 import com.cybersoft.minibank.service.EmailService;
+
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
+
 @Service
 public class EmailServiceImp implements EmailService {
     @Value("${spring.mail.username}")
@@ -17,29 +20,24 @@ public class EmailServiceImp implements EmailService {
     @Autowired
     private JavaMailSender javaMailSender;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     @Override
     @KafkaListener(topics = "password-mail-topic", groupId = "minibank-group")
-    public void sendSimpleMail(String message) { // Đổi String thành void
-        System.out.println("===> KAFKA CONSUMER NHẬN ĐƯỢC: " + message);
+    public void sendSimpleMail(String message) {
         try {
-            ObjectMapper mapper = new ObjectMapper();
-            JsonNode jsonNode = mapper.readTree(message);
-
-            String email = jsonNode.get("email").asText();
-            String otp = jsonNode.get("password").asText();
-
+            UserCreatedEvent event = objectMapper.readValue(message, UserCreatedEvent.class);
             SimpleMailMessage mailMessage = new SimpleMailMessage();
             mailMessage.setFrom(sender);
-            mailMessage.setTo(email);
+            mailMessage.setTo(event.email());
             mailMessage.setSubject("Mã Password tạm của bạn");
-            mailMessage.setText("Mã password tạm của bạn là: " + otp + "\nHiệu lực trong 5 phút.");
+            mailMessage.setText("Mã password tạm của bạn là: " + event.password() + "\nHiệu lực trong 5 phút.");
 
             javaMailSender.send(mailMessage);
-            System.out.println("===> GỬI MAIL THÀNH CÔNG TỚI: " + email);
 
         } catch (Exception e) {
-            System.err.println("===> LỖI TẠI CONSUMER: " + e.getMessage());
-            e.printStackTrace();
+            throw new  RuntimeException(e + "Consumer bị lỗi");
         }
     }
 }

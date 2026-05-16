@@ -15,6 +15,10 @@ spring:
       mail.smtp.auth: true
       mail.smtp.starttls.enable: true
       mail.debug: true
+  data:
+    redis:
+      host: localhost
+      port: 6379
   kafka:
     bootstrap-servers: localhost:9094
     producer:
@@ -36,6 +40,4 @@ server:
 jwt:
   key: XykIIDx7IrNXR8k19vju963FvJpQp1FPmAqZRMj6Ups=
 
-# Trong docker chạy cái lệnh này cài redis
-# docker run -d --name redis-server -p 6379:6379 redis
 #Cursor,antigravity

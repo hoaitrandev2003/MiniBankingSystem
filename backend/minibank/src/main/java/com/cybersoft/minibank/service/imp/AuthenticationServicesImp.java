@@ -1,5 +1,6 @@
 package com.cybersoft.minibank.service.imp;
 
+import com.cybersoft.minibank.UserCreatedEvent;
 import com.cybersoft.minibank.dto.LogInDTO;
 import com.cybersoft.minibank.dto.RegisterDTO;
 import com.cybersoft.minibank.dto.UserDTO;
@@ -15,16 +16,11 @@ import com.cybersoft.minibank.payload.request.VerifyRequest;
 import com.cybersoft.minibank.repository.RefreshTokenRepository;
 import com.cybersoft.minibank.repository.RoleRepostitory;
 import com.cybersoft.minibank.repository.UserRepository;
-import com.cybersoft.minibank.service.AuthenticationServices;
-import com.cybersoft.minibank.service.EmailService;
-import com.cybersoft.minibank.service.RedisService;
-import com.cybersoft.minibank.service.RefreshTokenService;
+import com.cybersoft.minibank.service.*;
 import com.cybersoft.minibank.utils.JwtUtilHelper;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import tools.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -33,8 +29,6 @@ import org.springframework.stereotype.Service;
 
 
 import java.security.SecureRandom;
-import java.util.HashMap;
-import java.util.Map;
 
 @Service
 public class AuthenticationServicesImp implements AuthenticationServices {
@@ -66,7 +60,10 @@ public class AuthenticationServicesImp implements AuthenticationServices {
     private RefreshTokenRepository refreshTokenRepository;
 
     @Autowired
-    private KafkaTemplate <String, String> kafkaTemplate;
+    private KafkaProducerService  kafkaProducerService;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     // Regex: Ít nhất 1 hoa, 1 thường, 1 số, 1 ký tự đặc biệt, tối thiểu 8 ký tự
     private final String COMMON_PATTERN = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$";
@@ -158,10 +155,7 @@ public class AuthenticationServicesImp implements AuthenticationServices {
         registerDTO.setAddress(registerRequest.getAddress());
 
         try {
-            // Chuyển Object thành String JSON để khớp với RedisService của bạn
-            ObjectMapper mapper = new ObjectMapper();
-            mapper.registerModule(new JavaTimeModule());
-            String jsonRegisterDTO = mapper.writeValueAsString(registerDTO);
+            String jsonRegisterDTO = objectMapper.writeValueAsString(registerDTO);
 
             // 4. Lưu dữ liệu tạm và đặt Lock 5 phút
             // Lưu data người dùng
@@ -170,18 +164,15 @@ public class AuthenticationServicesImp implements AuthenticationServices {
             redisService.setLock("LOCK_REG:" + registerRequest.getEmail(), 5);
 
             // 5. Gửi Kafka
-            Map<String, String> emailData = new HashMap<>();
-            emailData.put("email", registerRequest.getEmail());
-            emailData.put("password", randomCode);
-            kafkaTemplate.send("password-mail-topic", mapper.writeValueAsString(emailData))
-                    .whenComplete((result, ex) -> {
-                        if (ex != null) {
-                            // Log the error but maybe don't stop the whole registration if you have a backup plan
-                            System.err.println("Kafka failed to send: " + ex.getMessage());
-                        }
-                    });
+            UserCreatedEvent event =
+                    new UserCreatedEvent(
+                            registerRequest.getEmail(),
+                            randomCode
+                    );
+            kafkaProducerService.sendUserCreatedEvent(event);
+
         } catch (Exception e) {
-            throw new RuntimeException("Lỗi xử lý dữ liệu");
+            throw new RuntimeException("Lỗi xử lý dữ liệu" +e.getMessage());
         }
         return "Mã xác thực đã được gửi!";
     }
@@ -203,7 +194,7 @@ public class AuthenticationServicesImp implements AuthenticationServices {
 
             RegisterDTO tempUser = mapper.readValue(jsonData, RegisterDTO.class);
 
-            // So khớp mã khách nhập và mã mình đã lưu lúc nãy
+            // So khớp mã khách nhập và mã mình đã lưu trong redis
             if (tempUser.getPassword().equals(verifyRequest.getOldPassword())) {
                 // Lưu chính thức vào Database
                 UserEntity user = new UserEntity();
@@ -229,7 +220,7 @@ public class AuthenticationServicesImp implements AuthenticationServices {
                 return "Đăng ký thành công!";
             }
         } catch (Exception e) {
-            throw new InvalidNotValueUserException("Lỗi đọc dữ liệu xác thực");
+            throw new InvalidNotValueUserException("Lỗi đọc dữ liệu xác thực" + e.getMessage());
         }
 
         // Ném lỗi sai mã xác thực

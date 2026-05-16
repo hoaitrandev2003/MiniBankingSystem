@@ -11,7 +11,6 @@ $(document).ready(function() {
                     
                     // Gọi API logout
                     var accessToken = localStorage.getItem('access_token');
-                    var username = localStorage.getItem('username');
                     
                     $.ajax({
                         type: 'POST',
@@ -22,25 +21,15 @@ $(document).ready(function() {
                         },
                         dataType: 'json',
                         data: JSON.stringify({
-                            username: username
+                            refreshToken: localStorage.getItem('refresh_token')
                         }),
-                        success: function(response) {
-                            // Chỉ xóa thông tin khi nhận được code 200
-                            if (response.code === 200) {
-                                localStorage.removeItem('access_token');
-                                localStorage.removeItem('refresh_token');
-                                localStorage.removeItem('user');
-                                localStorage.removeItem('username');
-                                // Redirect về trang chủ
-                                location.href = 'login.html';
-                            } else {
-                                alert('Logout failed. Please try again.');
-                            }
-                        },
-                        error: function(xhr, status, error) {
-                            console.error('Logout error:', error);
-                            // Tất cả lỗi đều alert thất bại, không xóa localStorage
-                            alert('Logout failed. Please try again.');
+                        complete: function() {
+                            localStorage.removeItem('access_token');
+                            localStorage.removeItem('refresh_token');
+                            localStorage.removeItem('user');
+                            localStorage.removeItem('username');
+
+                            location.href = 'login.html';
                         }
                     });
                 });
