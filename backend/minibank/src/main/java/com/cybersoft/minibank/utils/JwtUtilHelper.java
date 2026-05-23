@@ -28,9 +28,17 @@ public class JwtUtilHelper {
         String jws = Jwts.builder().subject(data).expiration(expiryDate).signWith(key).compact();
         return jws;
     }
-    // Lấy username từ token
-    public String extractUsername(String token) {
-        return extractClaim(token, Claims::getSubject);
+
+    // Giải mã token
+    public String decodeToken(String data) {
+        SecretKey key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(secretKey));
+
+        return Jwts.parser()
+                .verifyWith(key)
+                .build()
+                .parseSignedClaims(data)
+                .getPayload()
+                .getSubject();
     }
 
     // Lấy expiration
@@ -54,9 +62,4 @@ public class JwtUtilHelper {
         return extractExpiration(token).before(new Date());
     }
 
-    // Validate token
-    public boolean validateToken(String token, String username) {
-        final String extractedUsername = extractUsername(token);
-        return (extractedUsername.equals(username) && !isTokenExpired(token));
-    }
 }

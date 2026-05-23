@@ -1,5 +1,6 @@
 package com.cybersoft.minibank.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -8,6 +9,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Setter
@@ -46,8 +48,15 @@ public class UserEntity {
     @Column(name = "failed_login_attempt")
     private int failedLoginAttempt = 0;
 
+    @Column(name = "lock_count")
+    private int lockCount = 0;
+
     @Column(length = 20)
     private String status = "ACTIVE";
+
+    @OneToMany(mappedBy =  "userEntity")
+    @JsonManagedReference
+    private List<BankAccountEntity> bankAccountEntities;
 
     @ManyToOne
     @JoinColumn(name = "role_id")
@@ -60,4 +69,7 @@ public class UserEntity {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @OneToMany(mappedBy = "user")
+    private List<RefreshTokenEntity> refreshTokens;
 }

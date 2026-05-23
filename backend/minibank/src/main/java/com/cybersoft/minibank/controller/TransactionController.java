@@ -3,14 +3,13 @@ package com.cybersoft.minibank.controller;
 import com.cybersoft.minibank.service.TransactionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 
+@CrossOrigin
 @RestController
 @RequestMapping("/api/transactions")
 public class TransactionController {
@@ -23,11 +22,11 @@ public class TransactionController {
     }
 
     @GetMapping("/filter")
-    public ResponseEntity<?> filter(@RequestParam String status,
-                                    @RequestParam Double fromAmount,
-                                    @RequestParam Double toAmount,
-                                    @RequestParam LocalDateTime fromDate,
-                                    @RequestParam LocalDateTime toDate,
+    public ResponseEntity<?> filter(@RequestParam(required = false) String status,
+                                    @RequestParam(required = false) Double fromAmount,
+                                    @RequestParam(required = false) Double toAmount,
+                                    @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fromDate,
+                                    @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime toDate,
                                     Pageable pageable) {
         return ResponseEntity.ok(transactionService.filter(status, fromAmount, toAmount, fromDate, toDate, pageable));
     }

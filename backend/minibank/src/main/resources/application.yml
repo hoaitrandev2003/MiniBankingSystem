@@ -4,7 +4,7 @@ spring:
   datasource:
     url: jdbc:mysql://localhost:3307/mini_banking
     username: root
-    password: admin123
+    password: 301101
   mail:
     host: smtp.gmail.com
     port: 587
@@ -15,11 +15,29 @@ spring:
       mail.smtp.auth: true
       mail.smtp.starttls.enable: true
       mail.debug: true
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  kafka:
+    bootstrap-servers: localhost:9094
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    consumer:
+      group-id: minibank-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      auto-offset-reset: earliest
 logging:
   level:
+    com.cybersoft.minibank: DEBUG
+    org.springframework.kafka: INFO
     org.springframework.mail: INFO
     jakarta.mail: INFO
 server:
   port: 8080
 jwt:
   key: XykIIDx7IrNXR8k19vju963FvJpQp1FPmAqZRMj6Ups=
+
+#Cursor,antigravity

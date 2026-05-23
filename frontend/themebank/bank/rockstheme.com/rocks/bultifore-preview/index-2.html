@@ -900,6 +900,64 @@
 		<script src="js/plugins.js"></script>
 		<!-- main js -->
 		<script src="js/main.js"></script>
+		<script>
+			// Kiểm tra JWT trong localStorage và thay đổi nút login thành logout
+			document.addEventListener('DOMContentLoaded', function() {
+				var token = localStorage.getItem('access_token');
+				if (token) {
+					// Thay đổi nút trong topbar
+					var topbarLogin = document.querySelector('.topbar-right ul li a[href="login.html"]');
+					if (topbarLogin) {
+						topbarLogin.innerHTML = 'Logout';
+						topbarLogin.href = 'javascript:logout()';
+					}
+					
+					// Thay đổi nút trong header-right-link
+					var headerLogin = document.querySelector('.header-right-link a.s-menu[href="login.html"]');
+					if (headerLogin) {
+						headerLogin.textContent = 'Logout';
+						headerLogin.href = 'javascript:logout()';
+					}
+				}
+			});
+			
+			// Hàm logout - gọi API logout trước
+			function logout() {
+				var token = localStorage.getItem('access_token');
+				var username = localStorage.getItem('username');
+				
+				// Gọi API logout
+				$.ajax({
+					type: 'POST',
+					url: 'http://localhost:8080/auth/sign-out', // Endpoint logout
+					headers: {
+						'Authorization': 'Bearer ' + token,
+						'Content-Type': 'application/json'
+					},
+					dataType: 'json',
+					data: JSON.stringify({
+						username: username
+					}),
+					success: function(response) {
+						// Nếu nhận được code 200 thì xóa tokens
+						if (response.code === 200) {
+							localStorage.removeItem('access_token');
+							localStorage.removeItem('refresh_token');
+							localStorage.removeItem('user');
+							localStorage.removeItem('username');
+							window.location.href = 'login.html';
+						} else {
+							alert('Logout failed. Please try again.');
+						}
+					},
+					error: function(xhr, status, error) {
+						console.error('Logout error:', error);
+						// Tất cả lỗi đều alert thất bại, không xóa localStorage
+						alert('Logout failed. Please try again.');
+					}
+				});
+			}
+		</script>
 	</body>
 
 <!-- Mirrored from rockstheme.com/rocks/bultifore-preview/index.html by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 22 Mar 2026 14:37:33 GMT -->
