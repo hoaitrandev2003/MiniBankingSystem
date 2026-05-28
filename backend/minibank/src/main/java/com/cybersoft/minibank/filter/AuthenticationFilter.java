@@ -1,6 +1,7 @@
 package com.cybersoft.minibank.filter;
 
 import com.cybersoft.minibank.dto.UserDTO;
+import com.cybersoft.minibank.service.BacklistService;
 import com.cybersoft.minibank.utils.JwtUtilHelper;
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
@@ -21,6 +22,8 @@ import java.util.List;
 
 @Component
 public class AuthenticationFilter extends OncePerRequestFilter {
+    @Autowired
+    private BacklistService blacklistService;
 
     @Autowired
     private JwtUtilHelper jwtHelper;
@@ -34,8 +37,20 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 
         if(authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
+            if (blacklistService.isBlacklisted(token)) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().write("Token revoked");
+                return;
+            }
+            boolean isValid = jwtHelper.verifyToken(token);
+            if (!isValid) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().write("Invalid token");
+                return;
+            }
+
             String decodeToken = jwtHelper.decodeToken(token);
-            System.out.println("user decode token" + decodeToken);
+
             if(decodeToken != null) {
 
                 //Chuyển kiểu chuỗi thành object
@@ -51,7 +66,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 
                 // Sinh ra cái thẻ
                 UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(user.getUsername(), "", List.of());
+                        new UsernamePasswordAuthenticationToken(user.getUsername(), null, list);
 
                 // Đóng mộc cho cái thẻ
                 SecurityContext  securityContext = SecurityContextHolder.getContext();

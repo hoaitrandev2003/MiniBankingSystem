@@ -34,34 +34,99 @@ windows.on('scroll', function() {
     var mean_menu = $('nav#dropdown');
     mean_menu.meanmenu();
     
-    // Delay to allow meanmenu to create mobile menu, then update login/logout
-    setTimeout(function() {
-        if (localStorage.getItem('access_token')) {
-            var loginLinks = $('a[href="login.html"]');
-            loginLinks.each(function() {
-                $(this).html('<img src="img/icon/login.png" alt="">Logout');
-                $(this).attr('href', '#');
-                $(this).on('click', function(e) {
-                    e.preventDefault();
-                    localStorage.removeItem('access_token');
-                    localStorage.removeItem('refresh_token');
-                    localStorage.removeItem('user');
-                    location.reload();
-                });
-            });
-        } else {
-            // Ensure login links are set back if no token (optional, but for consistency if token is removed elsewhere)
-            var logoutLinks = $('a[href="#"]');
-            logoutLinks.each(function() {
-                if ($(this).text().includes('Logout')) {
-                    $(this).html('<img src="img/icon/login.png" alt="">Login');
-                    $(this).attr('href', 'login.html');
-                    $(this).off('click'); // Remove logout handler
-                }
-            });
+    function setLoginAnchorText($link, text) {
+        var iconHtml = '<img src="img/icon/login.png" alt="">';
+        var hasIcon = $link.find('img').length > 0;
+        if (!hasIcon) {
+            $link.html(iconHtml + text);
+            return;
         }
-    }, 100);
-    
+
+        var textNode = $link.contents().filter(function() {
+            return this.nodeType === 3;
+        }).first();
+
+        if (textNode.length) {
+            textNode[0].nodeValue = text;
+        } else {
+            $link.append(text);
+        }
+    }
+
+    function attachLogoutHandlers() {
+        if (!window.Auth || !window.Auth.getAccessToken) {
+            return;
+        }
+
+        var isLoggedIn = !!window.Auth.getAccessToken();
+        
+        // Handle ALL login links: both a[href="login.html"] and links with login icon
+        var allLoginLinks = $('a[href="login.html"], a:has(img[src="img/icon/login.png"])').filter(function() {
+            var text = $(this).text().trim();
+            var $img = $(this).find('img[src="img/icon/login.png"]');
+            return text.toLowerCase().includes('login') || $img.length > 0;
+        });
+
+        allLoginLinks.each(function() {
+            var $link = $(this);
+            var isMainButton = $link.hasClass('s-menu');
+            var hasIcon = $link.find('img[src="img/icon/login.png"]').length > 0;
+            
+            if (isLoggedIn) {
+                if (isMainButton) {
+                    setLoginAnchorText($link, 'Logout');
+                } else if (hasIcon) {
+                    // Link with icon - update the text node after img
+                    var textNode = $link.contents().filter(function() {
+                        return this.nodeType === 3;
+                    }).first();
+                    if (textNode.length) {
+                        textNode[0].nodeValue = 'Logout';
+                    } else {
+                        $link.append('Logout');
+                    }
+                } else {
+                    $link.text('Logout');
+                }
+                $link.attr('href', '#');
+                $link.attr('title', 'Logout');
+                $link.addClass('auth-logout');
+                $link.off('click.auth').on('click.auth', function(e) {
+                    e.preventDefault();
+                    if (window.Auth && window.Auth.logout) {
+                        window.Auth.logout({ url: window.Auth.apiBaseUrl + '/logout', redirectUrl: 'login.html' });
+                    } else {
+                        localStorage.removeItem('access_token');
+                        localStorage.removeItem('refresh_token');
+                        localStorage.removeItem('user');
+                        window.location.href = 'login.html';
+                    }
+                });
+            } else if ($link.hasClass('auth-logout')) {
+                if (isMainButton) {
+                    setLoginAnchorText($link, 'Login');
+                } else if (hasIcon) {
+                    // Link with icon - update the text node after img
+                    var textNode = $link.contents().filter(function() {
+                        return this.nodeType === 3;
+                    }).first();
+                    if (textNode.length) {
+                        textNode[0].nodeValue = 'Login';
+                    }
+                } else {
+                    $link.text('Login');
+                }
+                $link.attr('href', 'login.html');
+                $link.attr('title', 'Login');
+                $link.removeClass('auth-logout');
+                $link.off('click.auth');
+            }
+        });
+    }
+
+    // Delay to allow meanmenu to build the mobile menu, then update login/logout links.
+    setTimeout(attachLogoutHandlers, 100);
+
 // Nice Select JS
   $('select').niceSelect();
     
@@ -217,40 +282,9 @@ windows.on('scroll', function() {
 	}
     
 
-    // Check for token and update login/logout on all pages
+    // Check for token and update login/logout links once the DOM is ready.
     $(document).ready(function() {
-        if (localStorage.getItem('access_token')) {
-            var loginLink = $('.topbar-right a[href="login.html"]');
-            if (loginLink.length) {
-                loginLink.html('<img src="img/icon/login.png" alt="">Logout');
-                loginLink.attr('href', '#');
-                loginLink.on('click', function(e) {
-                    e.preventDefault();
-                    localStorage.removeItem('access_token');
-                    localStorage.removeItem('refresh_token');
-                    localStorage.removeItem('user');
-                    location.reload();
-                });
-            }
-        }
-    });
-
-    // Check for token and update login/logout on all pages
-    $(document).ready(function() {
-        if (localStorage.getItem('access_token')) {
-            var loginLink = $('.topbar-right a[href="login.html"]');
-            if (loginLink.length) {
-                loginLink.html('<img src="img/icon/login.png" alt="">Logout');
-                loginLink.attr('href', '#');
-                loginLink.on('click', function(e) {
-                    e.preventDefault();
-                    localStorage.removeItem('access_token');
-                    localStorage.removeItem('refresh_token');
-                    localStorage.removeItem('user');
-                    location.reload();
-                });
-            }
-        }
+        attachLogoutHandlers();
     });
 
 })(jQuery); 

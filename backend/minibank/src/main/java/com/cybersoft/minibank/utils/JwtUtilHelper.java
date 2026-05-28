@@ -62,4 +62,25 @@ public class JwtUtilHelper {
         return extractExpiration(token).before(new Date());
     }
 
+    public boolean verifyToken(String token) {
+
+        try {
+
+            SecretKey key = Keys.hmacShaKeyFor(
+                    Decoders.BASE64.decode(secretKey)
+            );
+
+            Jwts.parser()
+                    .verifyWith(key)
+                    .build()
+                    .parseSignedClaims(token);
+
+            return !isTokenExpired(token);
+
+        } catch (Exception e) {
+
+            return false;
+        }
+    }
+
 }

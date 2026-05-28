@@ -17,6 +17,13 @@ $(document).ready(function() {
         var $submitBtn = $('#submit');
         $submitBtn.prop('disabled', true).text('Loading...');
         
+        if (!localStorage.getItem("deviceId")) {
+            localStorage.setItem(
+                "deviceId",
+                crypto.randomUUID()
+            );
+        }
+
         // Gọi API login
         $.ajax({
             type: 'POST',
@@ -25,7 +32,8 @@ $(document).ready(function() {
             dataType: 'json',
             data: JSON.stringify({
                 username: username,
-                password: password
+                password: password,
+                deviceId: localStorage.getItem("deviceId")
             }),
             success: function(response) {
                 // Kiểm tra response có code 200 và data
@@ -34,30 +42,38 @@ $(document).ready(function() {
                     var accessToken = response.data.accessToken;
                     var refreshToken = response.data.refreshToken;
                     
-                    // Lưu tokens vào localStorage
-                    localStorage.setItem('access_token', accessToken);
-                    localStorage.setItem('refresh_token', refreshToken);
-                    
-                    // Decode JWT để lấy thông tin user
-                    try {
-                        var payload = JSON.parse(atob(accessToken.split('.')[1]));
-                        var user = JSON.parse(payload.sub);
-                        // Lưu user object
-                        localStorage.setItem('user', JSON.stringify(user));
-                        // Lưu username riêng để dùng cho logout
-                        localStorage.setItem('username', username);
-                    } catch (e) {
-                        console.error('Lỗi khi decode token:', e);
-                        // Nếu decode thất bại, vẫn lưu username
-                        localStorage.setItem('username', username);
-                    }
-                    
+                    // Lưu tokens và user thông tin vào auth storage
+                    Auth.saveLoginData({
+                        accessToken: accessToken,
+                        refreshToken: refreshToken
+                    }, username);
+
                     showMessage('Login successful!', 'success');
 
-                    // Redirect sau 1.5 giây
+                    // Hiển thị preloader và redirect sau 3 giây
+                    var preloader = $('#preloader');
+                    if (preloader.length === 0) {
+                        preloader = $('<div id="preloader"></div>').css({
+                            'position': 'fixed',
+                            'left': '0',
+                            'top': '0',
+                            'z-index': '99999',
+                            'width': '100%',
+                            'height': '100%',
+                            'background-color': '#1b2654',
+                            'background-image': 'url(img/logo/preloader.gif)',
+                            'background-position': 'center center',
+                            'background-repeat': 'no-repeat',
+                            'overflow': 'visible',
+                            'display': 'block'
+                        });
+                        $(document.body).append(preloader);
+                    } else {
+                        preloader.fadeIn('fast');
+                    }
                     setTimeout(function() {
-                        window.location.href = 'index-3.html'; // Thay đổi URL trang
-                    }, 1500);
+                        window.location.href = 'index-2.html'; // Thay đổi URL trang
+                    }, 3000);
                 } else {
                     showMessage('Login failed', 'error');
                 }
@@ -114,7 +130,7 @@ $(document).ready(function() {
     
     // Kiểm tra nếu user đã login trước đó
     function checkAuthToken() {
-        var token = localStorage.getItem('access_token');
+        var token = Auth.getAccessToken();
         if (token) {
             // User đã login, có thể redirect tới dashboard
             console.log('User already logged in');
@@ -125,55 +141,65 @@ $(document).ready(function() {
     checkAuthToken();
 });
 
-// Hàm helper lấy token từ localStorage
-function getAuthToken() {
-    return localStorage.getItem('access_token');
-}
+// Optional async login form handler (compatibility with another layout)
+$(document).ready(function() {
+    $("#loginForm").submit(async function(e) {
+        e.preventDefault();
 
-// Hàm helper lấy user từ localStorage
-function getUser() {
-    var user = localStorage.getItem('user');
-    return user ? JSON.parse(user) : null;
-}
+        const username = $("#username").val();
+        const password = $("#password").val();
+        const deviceId = localStorage.getItem('deviceId');
 
-// Hàm helper lấy refresh token từ localStorage
-function getRefreshToken() {
-    return localStorage.getItem('refresh_token');
-}
+        try {
+            const response = await $.ajax({
+                url: 'http://localhost:8080/auth/login',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ username, password, deviceId })
+            });
 
-// Hàm helper xóa token (logout)
-function logout() {
-    var token = localStorage.getItem('access_token');
-    var username = localStorage.getItem('username');
-    
-    // Gọi API logout
-    $.ajax({
-        type: 'POST',
-        url: 'http://localhost:8080/auth/sign-out', // Endpoint logout
-        headers: {
-            'Authorization': 'Bearer ' + token,
-            'Content-Type': 'application/json'
-        },
-        dataType: 'json',
-        data: JSON.stringify({
-            username: username
-        }),
-        success: function(response) {
-            // Nếu nhận được code 200 thì xóa tokens
-            if (response.code === 200) {
-                localStorage.removeItem('access_token');
-                localStorage.removeItem('refresh_token');
-                localStorage.removeItem('user');
-                localStorage.removeItem('username');
-                window.location.href = 'login.html';
+            // Support responses that return token at root or under .data
+            const token = response.accessToken || (response.data && response.data.accessToken);
+            if (token) {
+                // Keep backward-compatible key and canonical Auth storage
+                localStorage.setItem('accessToken', token);
+                if (window.Auth && window.Auth.saveLoginData) {
+                    window.Auth.saveLoginData({ accessToken: token });
+                }
+
+                // Hiển thị preloader và redirect sau 3 giây
+                var preloader = $('#preloader');
+                if (preloader.length === 0) {
+                    preloader = $('<div id="preloader"></div>').css({
+                        'position': 'fixed',
+                        'left': '0',
+                        'top': '0',
+                        'z-index': '99999',
+                        'width': '100%',
+                        'height': '100%',
+                        'background-color': '#1b2654',
+                        'background-image': 'url(img/logo/preloader.gif)',
+                        'background-position': 'center center',
+                        'background-repeat': 'no-repeat',
+                        'overflow': 'visible',
+                        'display': 'block'
+                    });
+                    $(document.body).append(preloader);
+                } else {
+                    preloader.fadeIn('fast');
+                }
+                setTimeout(function() {
+                    window.location.href = 'index-2.html';
+                }, 3000);
             } else {
-                alert('Logout failed. Please try again.');
+                alert('Login did not return access token');
             }
-        },
-        error: function(xhr, status, error) {
-            console.error('Logout error:', error);
-            // Tất cả lỗi đều alert thất bại, không xóa localStorage
-            alert('Logout failed. Please try again.');
+
+        } catch (err) {
+            var msg = (err && err.responseText) ? err.responseText : 'Login failed';
+            alert(msg);
         }
     });
-}
+});
+
+
