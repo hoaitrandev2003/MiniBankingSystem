@@ -492,6 +492,14 @@ div#preloader {
     font-weight: 700;
     border-radius: 3px;
     text-transform: uppercase;
+    white-space: nowrap;
+}
+.s-menu img {
+    display: inline-block;
+    vertical-align: middle;
+    width: 16px;
+    height: auto;
+    margin-right: 8px;
 }
 .s-menu:hover {
     border: 1px solid #17aac9;

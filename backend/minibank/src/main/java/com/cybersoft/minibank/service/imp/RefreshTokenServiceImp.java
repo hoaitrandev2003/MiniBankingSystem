@@ -11,6 +11,7 @@ import com.cybersoft.minibank.repository.RefreshTokenRepository;
 import com.cybersoft.minibank.repository.UserRepository;
 import com.cybersoft.minibank.service.RefreshTokenService;
 import com.cybersoft.minibank.utils.JwtUtilHelper;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -35,15 +36,16 @@ public class RefreshTokenServiceImp implements RefreshTokenService {
     private JwtUtilHelper jwtTokenUtil;
 
     @Override
-    @Transactional
-    public String createRefreshToken(String username) {
+    public String createRefreshToken(String username, String deviviceId) {
         UserEntity user = userRepository.findByUserName(username).orElseThrow(InvalidUserException::new);
 
         // Yêu cầu: Mỗi người dùng chỉ có 1 token đang hoạt động -> Xóa cái cũ trước
         refreshTokenRepository.deleteByUser(user);
 
+
         RefreshTokenEntity refreshToken = new RefreshTokenEntity();
         refreshToken.setUser(user);
+        refreshToken.setDeviceId(deviviceId);
         refreshToken.setExpiryDate(Timestamp.from(Instant.now().plusMillis(refreshTokenDurationMs)).toLocalDateTime());
         refreshToken.setToken(UUID.randomUUID().toString()); // Tạo chuỗi ngẫu nhiên duy nhất
 

@@ -4,6 +4,7 @@ import com.cybersoft.minibank.UserCreatedEvent;
 import com.cybersoft.minibank.dto.LogInDTO;
 import com.cybersoft.minibank.dto.RegisterDTO;
 import com.cybersoft.minibank.dto.UserDTO;
+import com.cybersoft.minibank.dto.UserSessionDTO;
 import com.cybersoft.minibank.entity.RoleEntity;
 import com.cybersoft.minibank.entity.UserEntity;
 import com.cybersoft.minibank.exception.InvalidNotValueUserException;
@@ -18,6 +19,7 @@ import com.cybersoft.minibank.repository.RoleRepostitory;
 import com.cybersoft.minibank.repository.UserRepository;
 import com.cybersoft.minibank.service.*;
 import com.cybersoft.minibank.utils.JwtUtilHelper;
+import jakarta.servlet.http.HttpServletRequest;
 import tools.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -63,16 +65,67 @@ public class AuthenticationServicesImp implements AuthenticationServices {
     private KafkaProducerService  kafkaProducerService;
 
     @Autowired
+    private SessionService sessionService;
+
+    @Autowired
+    private BacklistService backlistService;
+
+    @Autowired
     private ObjectMapper objectMapper;
 
     // Regex: Ít nhất 1 hoa, 1 thường, 1 số, 1 ký tự đặc biệt, tối thiểu 8 ký tự
     private final String COMMON_PATTERN = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$";
 
     @Override
-    @Transactional
-    public LogInDTO login(LoginRequest loginRequest) {
+    public LogInDTO login(LoginRequest loginRequest, HttpServletRequest request) {
         UserEntity user = userRepository.findByUserName(loginRequest.getUsername())
                 .orElseThrow(() -> new InvalidUserException("Không tìm thấy Người dùng"));
+
+        String currentIp = request.getRemoteAddr();
+        String currentDeviceId = loginRequest.getDeviceId();
+
+        UserSessionDTO oldSession = sessionService.getSession(user.getUserName());
+
+        if (oldSession != null) {
+
+            boolean sameIp =
+                    oldSession.getIpAddress()
+                            .equals(currentIp);
+
+            boolean sameDevice =
+                    oldSession.getDeviceId()
+                            .equals(currentDeviceId);
+
+            // khác ip/device
+//            if (!sameIp || !sameDevice) {
+//
+//                throw new InvalidUserException(
+//                        "Tài khoản đang đăng nhập trên thiết bị khác"
+//                );
+//            }
+
+            if (!sameIp || !sameDevice) {
+
+                // blacklist access token cũ
+
+                backlistService.blacklistToken(
+                        oldSession.getAccessToken(),
+                        15
+                );
+
+                // xóa refresh token cũ
+
+                refreshTokenRepository.deleteByUser(user);
+
+                // xóa session cũ
+
+                sessionService.deleteSession(
+                        user.getUserName()
+                );
+            }
+
+            backlistService.blacklistToken(oldSession.getAccessToken(), 15);
+        }
 
         // check khóa vĩnh viễn
         if (user.getStatus().equals("LOCKED")) {
@@ -121,9 +174,23 @@ public class AuthenticationServicesImp implements AuthenticationServices {
             objectMapper.registerModule(new JavaTimeModule());
             String data = objectMapper.writeValueAsString(userDTO);
 
-            String refreshToken = refreshTokenService.createRefreshToken(user.getUserName());
+            String refreshToken = refreshTokenService.createRefreshToken(user.getUserName(),currentDeviceId);
             String accessToken = jwtHelper.generateToken(data);
 
+            UserSessionDTO session =
+                    new UserSessionDTO(
+                            user.getUserName(),
+                            currentIp,
+                            currentDeviceId,
+                            accessToken,
+                            refreshToken,
+                            System.currentTimeMillis()
+                    );
+
+            sessionService.saveSession(
+                    user.getUserName(),
+                    session
+            );
             return new LogInDTO(accessToken,refreshToken);
         } catch (Exception e) {
             e.printStackTrace();

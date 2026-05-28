@@ -1,6 +1,7 @@
 package com.cybersoft.minibank.filter;
 
 import com.cybersoft.minibank.dto.UserDTO;
+import com.cybersoft.minibank.service.BacklistService;
 import com.cybersoft.minibank.utils.JwtUtilHelper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import jakarta.servlet.*;
@@ -22,6 +23,8 @@ import java.util.List;
 
 @Component
 public class AuthenticationFilter extends OncePerRequestFilter {
+    @Autowired
+    private BacklistService blacklistService;
 
     @Autowired
     private JwtUtilHelper jwtHelper;
@@ -35,10 +38,21 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 
         if(authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
-            try {
-                String decodeToken = jwtHelper.decodeToken(token);
-                System.out.println("user decode token" + decodeToken);
-                if(decodeToken != null) {
+            if (blacklistService.isBlacklisted(token)) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().write("Token revoked");
+                return;
+            }
+            boolean isValid = jwtHelper.verifyToken(token);
+            if (!isValid) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().write("Invalid token");
+                return;
+            }
+
+            String decodeToken = jwtHelper.decodeToken(token);
+
+            if(decodeToken != null) {
 
                     //Chuyển kiểu chuỗi thành object
                     ObjectMapper objectMapper = new ObjectMapper();
@@ -52,9 +66,9 @@ public class AuthenticationFilter extends OncePerRequestFilter {
                     SimpleGrantedAuthority simpleGrantedAuthority = new SimpleGrantedAuthority(user.getRole());
                     list.add(simpleGrantedAuthority);
 
-                    // Sinh ra cái thẻ
-                    UsernamePasswordAuthenticationToken authentication =
-                            new UsernamePasswordAuthenticationToken(user.getUsername(), "", list);
+                // Sinh ra cái thẻ
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(user.getUsername(), null, list);
 
                     // Đóng mộc cho cái thẻ
                     SecurityContext  securityContext = SecurityContextHolder.getContext();
