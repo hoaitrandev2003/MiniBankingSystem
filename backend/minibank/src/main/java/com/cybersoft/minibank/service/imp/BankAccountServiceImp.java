@@ -35,14 +35,14 @@ public class BankAccountServiceImp implements BankAccountService {
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy số tài khoản"));
 
         // 3. Cập nhật số dư
-        double newBalance = account.getBalance() + amount.doubleValue();
+        BigDecimal newBalance = account.getBalance().add(amount);
         account.setBalance(newBalance);
         accountRepository.save(account);
 
         // 4. Lưu lịch sử giao dịch
         TransactionEntity transaction = new TransactionEntity();
         transaction.setToAccount(account);
-        transaction.setAmount(amount.doubleValue());
+        transaction.setAmount(amount);
         transaction.setTransactionType("DEPOSIT");
         transaction.setDescription(description);
         transaction.setCreatedAt(LocalDateTime.now());
@@ -53,7 +53,7 @@ public class BankAccountServiceImp implements BankAccountService {
 
     //Lấy số dư
     @Override
-    public double getAccountBalance(String accountNumber) {
+    public BigDecimal getAccountBalance(String accountNumber) {
         BankAccountEntity account = accountRepository.findByAccountNumber(accountNumber)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy tài khoản"));
         return account.getBalance() ;
@@ -70,16 +70,18 @@ public class BankAccountServiceImp implements BankAccountService {
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy người nhận: " + request.getToAccountNumber()));
 
         // Lấy số tiền cần chuyển
-        double transferAmount = request.getAmount().doubleValue();
+        BigDecimal transferAmount = request.getAmount();
 
         // 2. Kiểm tra số dư (Dùng toán tử so sánh < bình thường cho double)
-        if (fromAccount.getBalance() < transferAmount) {
-            throw new RuntimeException("Số dư không đủ để thực hiện giao dịch!");
+        if (fromAccount.getBalance().compareTo(transferAmount) < 0) {
+            throw new RuntimeException(
+                    "Số dư không đủ"
+            );
         }
 
         // 3. Thực hiện chuyển tiền
-        fromAccount.setBalance(fromAccount.getBalance() - transferAmount);
-        toAccount.setBalance(toAccount.getBalance() + transferAmount);
+        fromAccount.setBalance(fromAccount.getBalance().subtract(transferAmount));
+        toAccount.setBalance(toAccount.getBalance().add(transferAmount));
 
         accountRepository.save(fromAccount);
         accountRepository.save(toAccount);
@@ -88,27 +90,11 @@ public class BankAccountServiceImp implements BankAccountService {
         TransactionEntity tx = new TransactionEntity();
         tx.setFromAccount(fromAccount); // Thường Lead sẽ để quan hệ Object thay vì Id
         tx.setToAccount(toAccount);
-        tx.setAmount(Double.valueOf(transferAmount)); // Nếu bảng Transaction dùng BigDecimal
+        tx.setAmount(transferAmount); // Nếu bảng Transaction dùng BigDecimal
         tx.setCreatedAt(LocalDateTime.now());
         tx.setStatus("SUCCESS");
 
         transactionRepository.save(tx);
     }
 
-    private String generateUniqueAccountNumber() {
-        String accountNumber;
-        boolean exists;
-
-        do {
-            // Tạo chuỗi 10 số ngẫu nhiên
-            long number = (long) (Math.random() * 9_000_000_000L) + 1_000_000_000L;
-            accountNumber = String.valueOf(number);
-
-            // Kiểm tra xem số này đã có trong database chưa
-            exists = accountRepository.existsByAccountNumber(accountNumber);
-
-        } while (exists); // Nếu trùng thì lặp lại để lấy số khác
-
-        return accountNumber;
-    }
 }

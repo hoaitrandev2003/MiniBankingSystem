@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -19,14 +20,14 @@ public class BankAccountEntity {
 
     @Column(name = "account_number")
     private String accountNumber;
-    private double balance;
+    private BigDecimal balance;
     private String currency;
 
     @Column(name = "account_type")
     private String accountType;
 
     @Column(name = "daily_transfer_limit")
-    private double dailyTransferLimit;
+    private BigDecimal dailyTransferLimit;
     private int version;
     private String status;
 

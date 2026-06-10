@@ -69,4 +69,11 @@ public class AuthenticationController {
         baseResponse.setMessage(result);
         return  ResponseEntity.ok(baseResponse);
     }
+
+    @GetMapping("/session-check")
+    public ResponseEntity<?> sessionCheck(
+            @RequestHeader("Authorization") String authHeader) {
+
+        return ResponseEntity.ok().build();
+    }
 }

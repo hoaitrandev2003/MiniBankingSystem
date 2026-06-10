@@ -6,9 +6,11 @@ public interface RedisService {
 
     boolean isLocked(String key);
 
-    void save(String key, String value);
+    void save(String key, String value, long timeoutMinutes);
 
     String get(String key);
 
     void delete(String key);
+
+    boolean exists(String cccdKey);
 }
