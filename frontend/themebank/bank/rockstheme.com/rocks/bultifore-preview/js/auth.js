@@ -226,6 +226,29 @@ if (window.jQuery) {
         }
     });
 
+        // ===========================
+    // SESSION CHECK
+    // ===========================
+
+    setInterval(function() {
+
+        if (
+            window.location.pathname.includes('login.html')
+        ) {
+            return;
+        }
+
+        if (!window.Auth || !Auth.getAccessToken()) {
+            return;
+        }
+
+        $.ajax({
+            url: 'http://localhost:8080/auth/session-check',
+            type: 'GET'
+        });
+
+    }, 5000);
+
     // Auto logout on 401 responses (session revoked/expired)
 // =====================================================
 // AUTO LOGOUT WHEN TOKEN REVOKED / EXPIRED

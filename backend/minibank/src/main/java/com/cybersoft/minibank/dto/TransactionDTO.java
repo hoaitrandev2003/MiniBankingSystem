@@ -3,6 +3,7 @@ package com.cybersoft.minibank.dto;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Getter
@@ -11,5 +12,5 @@ public class TransactionDTO {
     private LocalDateTime createdAt;
     private String description;
     private String status;
-    private double amount;
+    private BigDecimal amount;
 }

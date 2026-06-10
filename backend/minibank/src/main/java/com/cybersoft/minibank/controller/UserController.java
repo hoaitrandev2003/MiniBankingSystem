@@ -42,8 +42,4 @@ public class UserController {
         return ResponseEntity.ok(" Xóa user "+ id + " thành công! ");
     }
 
-
-
-
-
 }
