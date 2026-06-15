@@ -21,8 +21,9 @@ import com.cybersoft.minibank.repository.RoleRepostitory;
 import com.cybersoft.minibank.repository.UserRepository;
 import com.cybersoft.minibank.service.*;
 import com.cybersoft.minibank.utils.JwtUtilHelper;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import jakarta.servlet.http.HttpServletRequest;
-import tools.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -98,7 +99,7 @@ public class AuthenticationServicesImp implements AuthenticationServices {
 
             boolean sameIp = oldSession.getIpAddress().equals(currentIp);
 
-            boolean sameDevice = oldSession.getDeviceId().equals(currentDeviceId);
+            boolean sameDevice = currentDeviceId != null && currentDeviceId.equals(oldSession.getDeviceId());
 
             // khác ip/device
 //            if (!sameIp || !sameDevice) {
@@ -174,9 +175,7 @@ public class AuthenticationServicesImp implements AuthenticationServices {
         UserDTO userDTO = UserMapper.mapDTO(user);
         userDTO.setUsername(loginRequest.getUsername());
         try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            objectMapper.registerModule(new JavaTimeModule());
-            String data = objectMapper.writeValueAsString(userDTO);
+            String data = this.objectMapper.writeValueAsString(userDTO);
 
             String refreshToken = refreshTokenService.createRefreshToken(user.getUserName(),currentDeviceId);
             String accessToken = jwtHelper.generateToken(data);
@@ -274,10 +273,7 @@ public class AuthenticationServicesImp implements AuthenticationServices {
             throw new InvalidUserRegisterException("Mã xác thực đã hết hạn hoặc không tồn tại");
         }
         try {
-            ObjectMapper mapper = new ObjectMapper();
-            mapper.registerModule(new JavaTimeModule());
-
-            RegisterDTO tempUser = mapper.readValue(jsonData, RegisterDTO.class);
+            RegisterDTO tempUser = this.objectMapper.readValue(jsonData, RegisterDTO.class);
 
             // So khớp mã khách nhập và mã mình đã lưu trong redis
             if (tempUser.getPassword().equals(verifyRequest.getOldPassword())) {
