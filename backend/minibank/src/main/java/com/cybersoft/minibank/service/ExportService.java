@@ -6,6 +6,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.util.List;
 
 public interface ExportService {
-    void ExportService(List<ExportStrategy> strategyList);
+    void registerStrategies(List<ExportStrategy> strategyList);
     void executeExport(String format, HttpServletResponse response);
 }

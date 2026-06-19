@@ -23,8 +23,9 @@ public class ExportServiceImp implements ExportService {
     private final Map<String, ExportStrategy> strategies = new HashMap<>();
 
     // Spring sẽ tự tìm tất cả các Class có @Component mà implement ExportStrategy và bỏ vào strategyList.
+    @Autowired
     @Override
-    public void ExportService(List<ExportStrategy> strategyList) {
+    public void registerStrategies(List<ExportStrategy> strategyList) {
         // Duyệt danh sách, bỏ vào Map để sau này lấy ra cho nhanh bằng Key
         strategyList.forEach(s -> strategies.put(s.getFormat(), s));
     }
