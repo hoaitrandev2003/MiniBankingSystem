@@ -275,6 +275,9 @@
 }    
 .app-btn.left-btn {
     margin-right: 10px;
+}      
+.app-btn.pdf-btn {
+    margin-right: 10px;
 }    
 .blog-search-option input {
     width: 75%;
@@ -550,7 +553,10 @@
 }    
 .app-btn.left-btn {
     margin-right: 6px;
-}    
+}        
+.app-btn.pdf-btn {
+    margin-right: 6px;
+}  
 .blog-grid .blog-content {
     padding: 20px 10px 30px 15px;
 }    

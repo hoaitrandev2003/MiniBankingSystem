@@ -3,6 +3,6 @@ package com.cybersoft.minibank.service;
 import com.cybersoft.minibank.payload.request.RefreshRequest;
 
 public interface RefreshTokenService {
-    String createRefreshToken(String username);
+    String createRefreshToken(String username, String deviviceId);
     String refreshToken(RefreshRequest refreshToken);
 }

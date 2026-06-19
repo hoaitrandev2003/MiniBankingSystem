@@ -6,6 +6,7 @@ import com.cybersoft.minibank.payload.response.BaseResponse;
 import com.cybersoft.minibank.service.AuthenticationServices;
 import com.cybersoft.minibank.service.EmailService;
 import com.cybersoft.minibank.utils.JwtUtilHelper;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -29,8 +30,8 @@ public class AuthenticationController {
 
     //Đăng nhập
     @PostMapping("/sign-in")
-    public ResponseEntity<?> signIn(@RequestBody LoginRequest loginRequest) {
-        LogInDTO user = authenticationServices.login(loginRequest);
+    public ResponseEntity<?> signIn(@RequestBody LoginRequest loginRequest, HttpServletRequest request) {
+        LogInDTO user = authenticationServices.login(loginRequest, request);
 
         // trả về
         BaseResponse baseResponse = new BaseResponse();
@@ -67,5 +68,12 @@ public class AuthenticationController {
         BaseResponse baseResponse = new BaseResponse();
         baseResponse.setMessage(result);
         return  ResponseEntity.ok(baseResponse);
+    }
+
+    @GetMapping("/session-check")
+    public ResponseEntity<?> sessionCheck(
+            @RequestHeader("Authorization") String authHeader) {
+
+        return ResponseEntity.ok().build();
     }
 }

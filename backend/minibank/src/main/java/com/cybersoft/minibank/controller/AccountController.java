@@ -14,10 +14,6 @@ public class AccountController {
 
     @Autowired
     private BankAccountService bankAccountService;
-
-    //Tạo tài khoản
-
-
     //Nạp tiền
     @PutMapping("/deposit/{accountNumber}")
     public ResponseEntity<?> deposit(
@@ -48,7 +44,7 @@ public class AccountController {
     //Lấy số dư
     @GetMapping("/{accountNumber}/balance")
     public ResponseEntity<?> getBalance(@PathVariable String accountNumber){
-        double balance =  bankAccountService.getAccountBalance(accountNumber);
+        BigDecimal balance =  bankAccountService.getAccountBalance(accountNumber);
         return ResponseEntity.ok("Số dư của tài khoản " + accountNumber + " là: " + balance); }
 
 }

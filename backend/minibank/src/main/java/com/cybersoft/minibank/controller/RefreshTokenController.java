@@ -7,6 +7,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @CrossOrigin
 @RestController
 @RequestMapping("/refresh")
@@ -18,6 +21,12 @@ public class RefreshTokenController {
     public ResponseEntity<?> refresh(@RequestBody RefreshRequest request) {
 
         String newAccessToken = refreshTokenService.refreshToken(request);
+        Map<String, String> response = new HashMap<>();
+
+        response.put(
+                "accessToken",
+                newAccessToken
+        );
 
         BaseResponse baseResponse = new BaseResponse();
         baseResponse.setMessage("success");

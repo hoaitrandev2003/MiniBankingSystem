@@ -4,6 +4,8 @@ import com.cybersoft.minibank.UserCreatedEvent;
 import com.cybersoft.minibank.dto.LogInDTO;
 import com.cybersoft.minibank.dto.RegisterDTO;
 import com.cybersoft.minibank.dto.UserDTO;
+import com.cybersoft.minibank.dto.UserSessionDTO;
+import com.cybersoft.minibank.entity.BankAccountEntity;
 import com.cybersoft.minibank.entity.RoleEntity;
 import com.cybersoft.minibank.entity.UserEntity;
 import com.cybersoft.minibank.exception.InvalidNotValueUserException;
@@ -13,12 +15,15 @@ import com.cybersoft.minibank.mapper.UserMapper;
 import com.cybersoft.minibank.payload.request.LoginRequest;
 import com.cybersoft.minibank.payload.request.RegisterRequest;
 import com.cybersoft.minibank.payload.request.VerifyRequest;
+import com.cybersoft.minibank.repository.BankAccountRepository;
 import com.cybersoft.minibank.repository.RefreshTokenRepository;
 import com.cybersoft.minibank.repository.RoleRepostitory;
 import com.cybersoft.minibank.repository.UserRepository;
 import com.cybersoft.minibank.service.*;
 import com.cybersoft.minibank.utils.JwtUtilHelper;
-import tools.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -28,13 +33,18 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 
+import java.math.BigDecimal;
 import java.security.SecureRandom;
+import java.time.LocalDateTime;
 
 @Service
 public class AuthenticationServicesImp implements AuthenticationServices {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private BankAccountRepository bankAccountRepository;
 
     @Autowired
     private RefreshTokenService refreshTokenService;
@@ -63,16 +73,64 @@ public class AuthenticationServicesImp implements AuthenticationServices {
     private KafkaProducerService  kafkaProducerService;
 
     @Autowired
+    private SessionService sessionService;
+
+    @Autowired
+    private BacklistService backlistService;
+
+    @Autowired
     private ObjectMapper objectMapper;
 
     // Regex: Ít nhất 1 hoa, 1 thường, 1 số, 1 ký tự đặc biệt, tối thiểu 8 ký tự
     private final String COMMON_PATTERN = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$";
 
-    @Override
     @Transactional
-    public LogInDTO login(LoginRequest loginRequest) {
+    @Override
+    public LogInDTO login(LoginRequest loginRequest, HttpServletRequest request) {
         UserEntity user = userRepository.findByUserName(loginRequest.getUsername())
                 .orElseThrow(() -> new InvalidUserException("Không tìm thấy Người dùng"));
+
+        String currentIp = request.getRemoteAddr();
+        String currentDeviceId = loginRequest.getDeviceId();
+
+        UserSessionDTO oldSession = sessionService.getSession(user.getUserName());
+
+        if (oldSession != null) {
+
+            boolean sameIp = oldSession.getIpAddress().equals(currentIp);
+
+            boolean sameDevice = currentDeviceId != null && currentDeviceId.equals(oldSession.getDeviceId());
+
+            // khác ip/device
+//            if (!sameIp || !sameDevice) {
+//
+//                throw new InvalidUserException(
+//                        "Tài khoản đang đăng nhập trên thiết bị khác"
+//                );
+//            }
+
+            if (!sameIp || !sameDevice) {
+
+                // blacklist access token cũ
+
+                backlistService.blacklistToken(
+                        oldSession.getAccessToken(),
+                        15
+                );
+
+                // xóa refresh token cũ
+
+                refreshTokenRepository.deleteByUser(user);
+
+                // xóa session cũ
+
+                sessionService.deleteSession(
+                        user.getUserName()
+                );
+            }
+
+            backlistService.blacklistToken(oldSession.getAccessToken(), 15);
+        }
 
         // check khóa vĩnh viễn
         if (user.getStatus().equals("LOCKED")) {
@@ -117,13 +175,22 @@ public class AuthenticationServicesImp implements AuthenticationServices {
         UserDTO userDTO = UserMapper.mapDTO(user);
         userDTO.setUsername(loginRequest.getUsername());
         try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            objectMapper.registerModule(new JavaTimeModule());
-            String data = objectMapper.writeValueAsString(userDTO);
+            String data = this.objectMapper.writeValueAsString(userDTO);
 
-            String refreshToken = refreshTokenService.createRefreshToken(user.getUserName());
+            String refreshToken = refreshTokenService.createRefreshToken(user.getUserName(),currentDeviceId);
             String accessToken = jwtHelper.generateToken(data);
 
+            UserSessionDTO session =
+                    new UserSessionDTO(
+                            user.getUserName(),
+                            currentIp,
+                            currentDeviceId,
+                            accessToken,
+                            refreshToken,
+                            System.currentTimeMillis()
+                    );
+
+            sessionService.saveSession(user.getUserName(), session);
             return new LogInDTO(accessToken,refreshToken);
         } catch (Exception e) {
             e.printStackTrace();
@@ -138,6 +205,23 @@ public class AuthenticationServicesImp implements AuthenticationServices {
         if(userRepository.findByEmail(registerRequest.getEmail()) != null) {
             throw new InvalidUserRegisterException( "Email đã tồn tại");
         }
+
+        if(userRepository.findByIdentityNumber(registerRequest.getIdentityNumber()).isPresent()){
+            throw new InvalidUserRegisterException( "CCCD đã tồn tại");
+        }
+
+        if(userRepository.findByPhone(registerRequest.getPhone()).isPresent()){
+            throw new RuntimeException("Số Điện thoại đã tồn tại");
+        }
+
+        String cccdKey = "TEMP_CCCD:" + registerRequest.getIdentityNumber();
+
+        if (redisService.exists(cccdKey)) {
+            throw new InvalidUserRegisterException(
+                    "CCCD đang trong quá trình đăng ký, vui lòng hoàn tất xác thực OTP"
+            );
+        }
+
 //        if (redisService.isLocked("LOCK_REG:" + registerRequest.getEmail())) {
 //            throw new InvalidUserRegisterException("Vui lòng đợi 5 phút trước khi yêu cầu mã mới");
 //        }
@@ -159,16 +243,16 @@ public class AuthenticationServicesImp implements AuthenticationServices {
 
             // 4. Lưu dữ liệu tạm và đặt Lock 5 phút
             // Lưu data người dùng
-            redisService.save("TEMP_USER:" + registerRequest.getEmail(), jsonRegisterDTO);
+            redisService.save(cccdKey, registerRequest.getEmail(),5);
+            redisService.save("TEMP_USER:" + registerRequest.getEmail(), jsonRegisterDTO,5);
             // Đặt lock để hiệu lực trong 5 phút
             redisService.setLock("LOCK_REG:" + registerRequest.getEmail(), 5);
 
             // 5. Gửi Kafka
-            UserCreatedEvent event =
-                    new UserCreatedEvent(
-                            registerRequest.getEmail(),
-                            randomCode
-                    );
+            UserCreatedEvent event = new UserCreatedEvent(
+                    registerRequest.getEmail(),
+                    randomCode
+            );
             kafkaProducerService.sendUserCreatedEvent(event);
 
         } catch (Exception e) {
@@ -181,7 +265,7 @@ public class AuthenticationServicesImp implements AuthenticationServices {
     @Transactional
     @Override
     public String verifyPassword(VerifyRequest verifyRequest) {
-        // "Gọi" dữ liệu từ Map ra dựa trên email
+        // Lấy mail từ redis
         String jsonData = redisService.get("TEMP_USER:" + verifyRequest.getEmail());
 
         // Nếu Redis tự xóa sau 5 phút, jsonData sẽ null
@@ -189,10 +273,7 @@ public class AuthenticationServicesImp implements AuthenticationServices {
             throw new InvalidUserRegisterException("Mã xác thực đã hết hạn hoặc không tồn tại");
         }
         try {
-            ObjectMapper mapper = new ObjectMapper();
-            mapper.registerModule(new JavaTimeModule());
-
-            RegisterDTO tempUser = mapper.readValue(jsonData, RegisterDTO.class);
+            RegisterDTO tempUser = this.objectMapper.readValue(jsonData, RegisterDTO.class);
 
             // So khớp mã khách nhập và mã mình đã lưu trong redis
             if (tempUser.getPassword().equals(verifyRequest.getOldPassword())) {
@@ -208,15 +289,27 @@ public class AuthenticationServicesImp implements AuthenticationServices {
                 user.setIdentityNumber(tempUser.getIdentityNumber());
                 user.setAddress(tempUser.getAddress());
 
+                String accountNumber = generateAccountNumber();
+                BankAccountEntity bankAccount = new BankAccountEntity();
+                bankAccount.setAccountNumber(accountNumber);
+                bankAccount.setAccountType("PAYMENT");
+                bankAccount.setBalance(BigDecimal.ZERO);
+                bankAccount.setDailyTransferLimit(new BigDecimal("10000000"));
+                bankAccount.setStatus("ACTIVE");
+                bankAccount.setCurrency("VND");
+                bankAccount.setUserEntity(user);
+                bankAccount.setCreatedAt(LocalDateTime.now());
+
                 RoleEntity defaultRole = roleRepostitory.findByName("ROLE_USER")
                         .orElseThrow(() -> new InvalidUserRegisterException("Lỗi: Không tìm thấy Role mặc định trong hệ thống"));
                 user.setRoleEntity(defaultRole);
                 userRepository.save(user);
+                bankAccountRepository.save(bankAccount);
 
                 // Dọn dẹp Redis
                 redisService.delete("TEMP_USER:" + verifyRequest.getEmail());
                 redisService.delete("LOCK_REG:" + verifyRequest.getEmail());
-
+                redisService.delete("TEMP_CCCD:" + tempUser.getIdentityNumber());
                 return "Đăng ký thành công!";
             }
         } catch (Exception e) {
@@ -225,16 +318,6 @@ public class AuthenticationServicesImp implements AuthenticationServices {
 
         // Ném lỗi sai mã xác thực
         throw new InvalidUserRegisterException("Mã xác thực sai!");
-    }
-
-    private String generateRandomAlphaNumeric(int length) {
-        String charSet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-        SecureRandom random = new SecureRandom();
-        StringBuilder sb = new StringBuilder(length);
-        for (int i = 0; i < length; i++) {
-            sb.append(charSet.charAt(random.nextInt(charSet.length())));
-        }
-        return sb.toString();
     }
 
     @Override
@@ -261,5 +344,21 @@ public class AuthenticationServicesImp implements AuthenticationServices {
         throw new RuntimeException("Không tìm thấy thông tin xác thực");
     }
 
+    private String generateRandomAlphaNumeric(int length) {
+        String charSet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        SecureRandom random = new SecureRandom();
+        StringBuilder sb = new StringBuilder(length);
+        for (int i = 0; i < length; i++) {
+            sb.append(charSet.charAt(random.nextInt(charSet.length())));
+        }
+        return sb.toString();
+    }
 
+    private String generateAccountNumber() {
+        String accountNumber;
+        do {
+            accountNumber = "9704" + (1000000000L + new SecureRandom().nextInt(900000000));
+        } while (bankAccountRepository.existsByAccountNumber(accountNumber));
+        return accountNumber;
+    }
 }

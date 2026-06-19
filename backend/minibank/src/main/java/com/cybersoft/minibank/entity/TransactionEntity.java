@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Getter
@@ -17,7 +18,7 @@ public class TransactionEntity {
 
     @Column(name = "transaction_code")
     private String transactionCode;
-    private double amount;
+    private BigDecimal amount;
 
     @Column(name = "transaction_type")
     private String transactionType;

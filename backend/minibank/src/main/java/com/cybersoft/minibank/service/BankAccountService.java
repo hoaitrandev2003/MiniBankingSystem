@@ -6,6 +6,6 @@ import java.math.BigDecimal;
 
 public interface BankAccountService {
     String deposit(String accountNumber, BigDecimal amount, String description);
-    double getAccountBalance(String accountNumber);
+    BigDecimal getAccountBalance(String accountNumber);
     void transferMoney(TransferRequestDTO request);
 }
