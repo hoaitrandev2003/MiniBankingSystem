@@ -299,7 +299,7 @@
                                     <li class="active"><a href="a-send-money.html"><i class="ti-new-window"></i>Send Money</a></li>
                                     <li><a href="a-request-money.html"><i class="ti-receipt"></i>Request Money</a></li>
                                     <li><a href="a-withdraw-money.html"><i class="ti-import"></i>Withdraw Money</a></li>
-                                    <li><a href="a-deposite-money.html"><i class="ti-wallet"></i>Deposite Money</a></li>
+                                    <li><a href="a-deposite-money.html"><i class="ti-wallet"></i>Deposit Money</a></li>
                                     <li><a href="a-currency-change.html"><i class="ti-stats-up"></i>Currency Exchange</a></li>
                                     <li><a href="a-add-bank.html"><i class="ti-pencil-alt"></i>Bank Account</a></li>
                                     <li><a href="a-card-number.html"><i class="ti-credit-card"></i>Card Number</a></li>
@@ -325,36 +325,66 @@
                                         <div class="form-text">
                                             <h4 class="form-top">Send Money</h4>
                                             <div class="form-inner">
-                                                <form action="#">
+                                                <form action="#" id="transfer-form">
                                                     <div class="row">
-                                                        <div class="col-md-6 col-sm-6 col-xs-12">
+                                                        <!-- <div class="col-md-6 col-sm-6 col-xs-12">
+                                                            <label for="currencyfrr">Curreny</label>
+                                                             <select name="currency-select" id="currencyfrr">
+                                                                <option value="position">VND</option>
+                                                                <option value="position">USD</option>
+                                                            </select>
+                                                        </div> -->
+                                                        <div class="col-md-12 col-sm-12 col-xs-12">
+                                                            <input type="text" id="tf-from-account" placeholder="Sender Account Number">
+                                                        </div>
+                                                        <div class="col-md-12 col-sm-12 col-xs-12">
+                                                            <input type="text" id="tf-to-account" placeholder="Receiver Account Number">
+                                                        </div>
+                                                        <div class="col-md-12 col-sm-12 col-xs-12">
                                                            <label for="m-send">Type Amount</label>
                                                            <input type="text" value="0" id="m-send">
                                                         </div>
-                                                        <div class="col-md-6 col-sm-6 col-xs-12">
-                                                            <label for="currencyfrr">Curreny</label>
-                                                             <select name="currency-select" id="currencyfrr">
-                                                                <option value="position">USD</option>
-                                                                <option value="position">EUR</option>
-                                                                <option value="position">KSR</option>
-                                                                <option value="position">INR</option>
-                                                                <option value="position">BDT</option>
-                                                            </select>
-                                                        </div>
-                                                        <div class="col-md-8 col-sm-8 col-xs-12">
-                                                            <input type="email" placeholder="Receiver Id Number / Email">
-                                                        </div>
-                                                        <div class="col-md-4 col-sm-4 col-xs-12">
-                                                            <button type="submit">Submit</button>
-                                                        </div>
                                                         <div class="col-md-12 col-sm-12 col-xs-12">
-                                                            <label for="textmsde">Recipient Copy</label>
-                                                            <textarea name="textarea" rows="4" id="textmsde"></textarea>
+                                                            <label for="textmsde">Description</label>
+                                                            <textarea name="textarea" rows="4" id="textmsde" placeholder="Nhập nội dung chuyển tiền..."></textarea>
+                                                        </div>
+                                                        <div class="col-md-4 col-sm-4 col-xs-12" style="margin-top: 20px !important;">
+                                                            <button type="button" id="btn-transfer">Transfer</button>
                                                         </div>
                                                     </div>
                                                 </form>
                                             </div>
                                         </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="modal fade" id="otp-modal" tabindex="-1" role="dialog" data-backdrop="static" data-keyboard="false">
+                                <div class="modal-dialog" role="document">
+                                    <div class="modal-content">
+                                        
+                                        <div class="modal-header">
+                                            <h4 class="modal-title text-center" style="font-weight: bold; color: #17aac9;">Xác thực mã OTP</h4>
+                                        </div>
+                                        
+                                        <div class="modal-body text-center">
+                                            <p class="text-muted text-center" style="font-size: 14px; margin-bottom: 20px; width: 100%; color: #17aac9;">
+                                                Mã OTP đã được gửi vào email của bạn. Vui lòng kiểm tra hộp thư!
+                                            </p>
+                                            
+                                            <div style="width: 250px; margin: 0 auto; display: block; clear: both;">
+                                                <input type="text" id="otp-input" class="form-control text-center" placeholder="Mã OTP" 
+                                                    style="font-size: 24px; font-weight: bold; letter-spacing: 6px; height: 50px; width: 100%; color: #17aac9;">
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="modal-footer" style="text-align: center; border-top: none; padding-bottom: 25px;">
+                                            <div style="display: inline-block;">
+                                                <button type="button" id="btn-confirm-transfer" class="btn btn-success" style="float: none; margin: 0 5px;">Xác nhận giao dịch</button>
+                                                <button type="button" id="btn-close-modal" class="btn btn-default" style="float: none; margin: 0 5px;">Hủy bỏ</button>
+                                            </div>
+                                        </div>
+                                        
                                     </div>
                                 </div>
                             </div>
@@ -505,6 +535,8 @@
 		<script src="js/auth.js"></script>
 		<!-- main js -->
 		<script src="js/main.js"></script>
+        <!-- send-money js -->
+        <script src="js/send-money.js"></script>
 	</body>
 
 <!-- Mirrored from rockstheme.com/rocks/bultifore-preview/a-send-money.html by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 22 Mar 2026 14:37:39 GMT -->
