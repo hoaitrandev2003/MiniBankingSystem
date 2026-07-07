@@ -85,6 +85,8 @@ ALTER TABLE bank_accounts ADD CONSTRAINT fk_accounts_user FOREIGN KEY (user_id)R
 ALTER TABLE transactions ADD CONSTRAINT fk_transactions_from_account FOREIGN KEY (from_account_id)REFERENCES bank_accounts(id);
 ALTER TABLE transactions ADD CONSTRAINT fk_transactions_to_account FOREIGN KEY (to_account_id)REFERENCES bank_accounts(id);
 ALTER TABLE transactions ADD CONSTRAINT fk_transactions_category FOREIGN KEY (transaction_categories_id)REFERENCES transaction_categories(id);
+ALTER TABLE transactions ADD COLUMN otp VARCHAR(30);
+ALTER TABLE transactions ADD COLUMN otp_expired_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP + INTERVAL 5 MINUTE);
 ALTER TABLE transaction_audit_logs ADD CONSTRAINT fk_audit_transaction FOREIGN KEY (transaction_id) REFERENCES transactions(id);
 ALTER TABLE transaction_audit_logs ADD CONSTRAINT fk_audit_user FOREIGN KEY (performed_by) REFERENCES users(id);
 ALTER TABLE refresh_tokens ADD CONSTRAINT fk_token_user FOREIGN KEY (user_id)REFERENCES users(id);

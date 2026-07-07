@@ -17,7 +17,7 @@ $(document).ready(function() {
         var token = localStorage.getItem('access_token');
 
         if (!token) {
-            alert("Không tìm thấy token. Vui lòng đăng nhập lại!");
+            alert("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại!");
             return;
         }
 
