@@ -27,6 +27,10 @@ public class TransactionEntity {
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
+    private String otp;
+
+    @Column(name = "otp_expired_at")
+    private LocalDateTime otpExpiredAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "from_account_id")
