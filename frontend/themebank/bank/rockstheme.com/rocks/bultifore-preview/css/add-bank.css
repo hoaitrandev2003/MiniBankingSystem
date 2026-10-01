@@ -1,0 +1,330 @@
+.send-money-form.add-bank-form {
+    background: linear-gradient(180deg, #101c36 0%, #0f1d42 100%);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 22px;
+    box-shadow: 0 18px 42px rgba(15, 23, 42, 0.12);
+    overflow: hidden;
+}
+
+.send-money-form.add-bank-form .form-text {
+    padding: 0;
+}
+
+.send-money-form.add-bank-form .form-top {
+    background: linear-gradient(135deg, #0d1833, #162d56);
+    color: #fff;
+    padding: 24px 28px 18px;
+    margin: 0;
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+
+.send-money-form.add-bank-form .form-inner {
+    padding: 26px 28px 30px;
+    background: linear-gradient(180deg, rgba(17, 29, 56, 0.96), rgba(11, 18, 32, 0.96));
+}
+
+.bank-account-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.55fr) minmax(260px, 0.8fr);
+    gap: 22px;
+    align-items: start;
+}
+
+.bank-account-hero {
+    background: linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 18px;
+    padding: 20px 22px;
+    margin-bottom: 24px;
+    color: #fff;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 12px 24px rgba(8, 14, 29, 0.08);
+}
+
+.bank-account-hero-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    color: #f8fbff;
+}
+
+.bank-account-hero-sub {
+    font-size: 13px;
+    color: rgba(255,255,255,0.78);
+    line-height: 1.7;
+}
+
+.bank-account-preview {
+    background: linear-gradient(135deg, #0d1833 0%, #142a4d 36%, #0b1730 100%);
+    border-radius: 22px;
+    padding: 22px 20px 18px;
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.1);
+    box-shadow: 0 20px 40px rgba(9, 17, 38, 0.26);
+    position: relative;
+    overflow: hidden;
+}
+
+.bank-account-preview::before,
+.bank-account-preview::after {
+    content: "";
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.06);
+}
+
+.bank-account-preview::before {
+    width: 200px;
+    height: 200px;
+    right: -70px;
+    top: -75px;
+}
+
+.bank-account-preview::after {
+    width: 170px;
+    height: 170px;
+    left: -45px;
+    bottom: -80px;
+}
+
+.preview-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    position: relative;
+    z-index: 1;
+}
+
+.preview-brand {
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+}
+
+.preview-chip {
+    width: 42px;
+    height: 30px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #f7d88d 0%, #d79f4b 100%);
+    box-shadow: inset 0 0 0 2px rgba(95,73,17,0.25);
+    position: relative;
+}
+
+.preview-chip::before,
+.preview-chip::after {
+    content: "";
+    position: absolute;
+    inset: 7px 8px;
+    border-radius: 6px;
+    border: 2px solid rgba(96,73,13,0.55);
+}
+
+.preview-chip::after {
+    inset: 14px 10px 6px 10px;
+    border-left: none;
+    border-right: none;
+}
+
+.preview-number {
+    font-size: 18px;
+    letter-spacing: 2px;
+    font-weight: 700;
+    margin-bottom: 18px;
+    position: relative;
+    z-index: 1;
+}
+
+.preview-meta {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    position: relative;
+    z-index: 1;
+}
+
+.preview-label {
+    font-size: 10px;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.7);
+    margin-bottom: 5px;
+}
+
+.preview-name,
+.preview-balance {
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.form-grid {
+    margin-top: 10px;
+}
+
+.form-field {
+    margin-bottom: 18px;
+}
+
+.form-field label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    margin-bottom: 9px;
+    color: rgba(237, 244, 255, 0.9);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.send-money-form.add-bank-form .form-inner form input,
+.send-money-form.add-bank-form .form-inner form select {
+    width: 100%;
+    height: 52px;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 0 14px;
+    background: rgba(255,255,255,0.04);
+    color: #edf4ff;
+    text-indent: 0;
+    margin-bottom: 0;
+    transition: all 0.25s ease;
+    outline: none;
+    box-shadow: inset 0 1px 2px rgba(255,255,255,0.02);
+}
+
+.send-money-form.add-bank-form .form-inner form input::placeholder {
+    color: rgba(237, 244, 255, 0.54);
+}
+
+.send-money-form.add-bank-form .form-inner form input:focus,
+.send-money-form.add-bank-form .form-inner form select:focus {
+    border-color: rgba(120, 185, 255, 0.6);
+    background: rgba(255,255,255,0.06);
+    box-shadow: 0 0 0 4px rgba(120, 185, 255, 0.08);
+}
+
+.send-money-form.add-bank-form .form-inner form input[readonly] {
+    background: rgba(255,255,255,0.06);
+    color: #edf4ff;
+    cursor: default;
+}
+
+.check-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin: 4px 0 16px;
+    color: #edf4ff;
+    font-weight: 600;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 13px;
+}
+
+.check-row input {
+    width: 12px;
+    height: 12px;
+    accent-color: #7cc7ff;
+    margin: 0;
+    transform: scale(0.92);
+}
+
+.submit-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.dashboard-content .form-inner form button {
+    height: 52px;
+    padding: 0 28px;
+    border-radius: 12px;
+    border: none;
+    background: linear-gradient(135deg, #0d1833 0%, #19396d 100%);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+    box-shadow: 0 12px 24px rgba(13, 24, 51, 0.22);
+    transition: all 0.2s ease;
+    width: auto;
+    margin-top: 0;
+}
+
+.dashboard-content .form-inner form button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 15px 28px rgba(13, 24, 51, 0.28);
+}
+
+.secondary-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 52px;
+    padding: 0 22px;
+    border-radius: 12px;
+    background: #edf2f8;
+    color: #1d2a3a;
+    border: 1px solid #dce5f1;
+    text-decoration: none;
+    font-weight: 700;
+    transition: all 0.2s ease;
+}
+
+.secondary-btn:hover {
+    background: #e3ebf7;
+    text-decoration: none;
+    transform: translateY(-1px);
+}
+
+.bank-account-status {
+    display: none;
+    margin-top: 14px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.bank-account-status.success {
+    display: block;
+    background: rgba(23, 185, 120, 0.09);
+    color: #0e8f62;
+    border: 1px solid rgba(23, 185, 120, 0.18);
+}
+
+.bank-account-status.error {
+    display: block;
+    background: rgba(220, 53, 69, 0.07);
+    color: #c11c2e;
+    border: 1px solid rgba(220, 53, 69, 0.15);
+}
+
+@media (max-width: 991px) {
+    .bank-account-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 767px) {
+    .send-money-form.add-bank-form .form-top {
+        padding: 22px 18px 14px;
+        font-size: 22px;
+    }
+
+    .send-money-form.add-bank-form .form-inner {
+        padding: 18px 16px 22px;
+    }
+
+    .submit-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .secondary-btn,
+    .dashboard-content .form-inner form button {
+        width: 100%;
+    }
+}

@@ -38,6 +38,48 @@
 
 		<!-- modernizr css -->
 		<script src="js/vendor/modernizr-2.8.3.min.js"></script>
+
+        <style>
+            .send-account-summary {
+                background: linear-gradient(135deg, #0f1d42 0%, #192d61 30%, #0a1737 100%);
+                border-radius: 0;
+                padding: 18px 20px;
+                margin: 0 0 10px;
+                color: #fff;
+                border: 1px solid rgba(255,255,255,0.12);
+                border-top: none;
+                box-shadow: none;
+            }
+            .send-account-summary-top {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 16px;
+                margin-bottom: 8px;
+            }
+            .send-account-label {
+                font-size: 11px;
+                letter-spacing: 1.5px;
+                text-transform: uppercase;
+                color: rgba(255,255,255,0.72);
+            }
+            .send-account-name {
+                font-size: 18px;
+                font-weight: 700;
+                letter-spacing: 0.5px;
+            }
+            .send-account-amount {
+                font-size: 20px;
+                font-weight: 700;
+                color: #dff5ff;
+                white-space: nowrap;
+            }
+            .send-account-content {
+                font-size: 14px;
+                color: rgba(255,255,255,0.8);
+                line-height: 1.5;
+            }
+        </style>
 	</head>
 		<body>
 
@@ -105,12 +147,7 @@
                                         <div class="collapse navbar-collapse" id="navbar-example">
                                             <div class="main-menu">
                                                 <ul class="nav navbar-nav navbar-right">
-                                                    <li><a class="pages" href="index-2.html">Home</a>
-                                                        <ul class="sub-menu">
-                                                            <li><a href="index-2.html">Home 01</a></li>
-                                                            <li><a href="index-3.html">Home 02</a></li>
-                                                        </ul>
-                                                    </li>
+                                                    <li><a href="index-3.html">Home</a></li>
                                                     <li><a href="about.html">About us</a></li>
                                                     <li><a class="pages" href="#">Pages</a>
                                                         <ul class="sub-menu">
@@ -123,16 +160,11 @@
                                                             <li><a href="signup.html">Register</a></li>
                                                         </ul>
                                                     </li>
-                                                    <li><a class="pages" href="#">Dashboard</a>
+                                                    <li><a class="pages" href="#">Card Number</a>
                                                         <ul class="sub-menu">
-                                                            <li><a href="a-dashboard.html">Dashboard</a></li>
-                                                            <li><a href="a-send-money.html">Send Money</a></li>
-                                                            <li><a href="a-request-money.html">Request Money</a></li>
-                                                            <li><a href="a-withdraw-money.html">Withdraw Money</a></li>
-                                                            <li><a href="a-deposite-money.html">Deposite Money</a></li>
-                                                            <li><a href="a-currency-change.html">Currency Exchange</a></li>
-                                                            <li><a href="a-add-bank.html">Bank Account</a></li>
                                                             <li><a href="a-card-number.html">Card Number</a></li>
+                                                            <li><a href="a-send-money.html">Send Money</a></li>
+                                                            <li><a href="a-add-bank.html">Bank Account</a></li>
                                                             <li><a href="a-transection-log.html">Transection Log</a></li>
                                                             <li><a href="a-setting-money.html">Notifications</a></li>
                                                         </ul>
@@ -168,12 +200,7 @@
                                 </div>
                                 <nav id="dropdown">
                                     <ul>
-                                        <li><a class="pages" href="index-2.html">Home</a>
-                                            <ul class="sub-menu">
-                                                <li><a href="index-2.html">Home 01</a></li>
-                                                <li><a href="index-3.html">Home 02</a></li>
-                                            </ul>
-                                        </li>
+                                        <li><a href="index-3.html">Home</a></li>
                                         <li><a href="about.html">About us</a></li>
                                         <li><a class="pages" href="#">Pages</a>
                                             <ul class="sub-menu">
@@ -186,16 +213,11 @@
                                                 <li><a href="signup.html">Register</a></li>
                                             </ul>
                                         </li>
-                                        <li><a class="pages" href="#">Dashboard</a>
+                                        <li><a class="pages" href="#">Card Number</a>
                                             <ul class="sub-menu">
-                                                <li><a href="a-dashboard.html">Dashboard</a></li>
-                                                <li><a href="a-send-money.html">Send Money</a></li>
-                                                <li><a href="a-request-money.html">Request Money</a></li>
-                                                <li><a href="a-withdraw-money.html">Withdraw Money</a></li>
-                                                <li><a href="a-deposite-money.html">Deposite Money</a></li>
-                                                <li><a href="a-currency-change.html">Currency Exchange</a></li>
-                                                <li><a href="a-add-bank.html">Bank Account</a></li>
                                                 <li><a href="a-card-number.html">Card Number</a></li>
+                                                <li><a href="a-send-money.html">Send Money</a></li>
+                                                <li><a href="a-add-bank.html">Bank Account</a></li>
                                                 <li><a href="a-transection-log.html">Transection Log</a></li>
                                                 <li><a href="a-setting-money.html">Notifications</a></li>
                                             </ul>
@@ -229,7 +251,7 @@
                                 <h3>Send Money</h3>
                             </div>
                             <ul>
-                                <li class="home-bread">Dashboard</li>
+                                <li class="home-bread">Card Number</li>
                                 <li>Send Money</li>
                             </ul>
                         </div>
@@ -295,14 +317,9 @@
                         <aside class="sidebar">
                             <div class="dashboard-side">
                                 <ul>
-                                    <li><a href="a-dashboard.html"><i class="ti-dashboard"></i>Dashboard</a></li>
-                                    <li class="active"><a href="a-send-money.html"><i class="ti-new-window"></i>Send Money</a></li>
-                                    <li><a href="a-request-money.html"><i class="ti-receipt"></i>Request Money</a></li>
-                                    <li><a href="a-withdraw-money.html"><i class="ti-import"></i>Withdraw Money</a></li>
-                                    <li><a href="a-deposite-money.html"><i class="ti-wallet"></i>Deposit Money</a></li>
-                                    <li><a href="a-currency-change.html"><i class="ti-stats-up"></i>Currency Exchange</a></li>
-                                    <li><a href="a-add-bank.html"><i class="ti-pencil-alt"></i>Bank Account</a></li>
                                     <li><a href="a-card-number.html"><i class="ti-credit-card"></i>Card Number</a></li>
+                                    <li class="active"><a href="a-send-money.html"><i class="ti-new-window"></i>Send Money</a></li>
+                                    <li><a href="a-add-bank.html"><i class="ti-pencil-alt"></i>Bank Account</a></li>
                                     <li><a href="a-transection-log.html"><i class="ti-layout-list-thumb"></i>Transection Log</a></li>
                                     <li><a href="a-setting-money.html"><i class="ti-settings"></i>Settings</a></li>
                                 </ul>
@@ -324,21 +341,39 @@
                                     <div class="send-money-form">
                                         <div class="form-text">
                                             <h4 class="form-top">Send Money</h4>
+                                            <div class="send-account-summary">
+                                                <div class="send-account-summary-top">
+                                                    <div>
+                                                        <div class="send-account-label">Bank Acc</div>
+                                                        <div class="send-account-name">Bultifore</div>
+                                                    </div>
+                                                    <div class="send-account-amount">$25,500</div>
+                                                </div>
+                                                <div class="send-account-content">Transfer for monthly family support and utility payments.</div>
+                                            </div>
                                             <div class="form-inner">
                                                 <form action="#" id="transfer-form">
                                                     <div class="row">
-                                                        <!-- <div class="col-md-6 col-sm-6 col-xs-12">
-                                                            <label for="currencyfrr">Curreny</label>
+                                                        <div class="col-md-6 col-sm-6 col-xs-12">
+                                                           <label for="m-send">Bank Account</label>
+                                                           <input type="text" placeholder="Account Number" id="m-send">
+                                                        </div>
+                                                        <div class="col-md-6 col-sm-6 col-xs-12">
+                                                            <label for="currencyfrr">Bank Name</label>
                                                              <select name="currency-select" id="currencyfrr">
-                                                                <option value="position">VND</option>
-                                                                <option value="position">USD</option>
+                                                                <option value="position">Bultifore Bank</option>
+                                                                <option value="position">Vietcombank</option>
+                                                                <option value="position">Techcombank</option>
+                                                                <option value="position">ACB</option>
+                                                                <option value="position">TPBank</option>
                                                             </select>
                                                         </div> -->
                                                         <div class="col-md-12 col-sm-12 col-xs-12">
                                                             <input type="text" id="tf-from-account" placeholder="Sender Account Number">
                                                         </div>
-                                                        <div class="col-md-12 col-sm-12 col-xs-12">
-                                                            <input type="text" id="tf-to-account" placeholder="Receiver Account Number">
+                                                        <div class="col-md-8 col-sm-8 col-xs-12">
+                                                            <label for="m-send">Amount</label>
+                                                            <input type="email" value="0" placeholder="Amount" id="m-send">
                                                         </div>
                                                         <div class="col-md-12 col-sm-12 col-xs-12">
                                                            <label for="m-send">Type Amount</label>

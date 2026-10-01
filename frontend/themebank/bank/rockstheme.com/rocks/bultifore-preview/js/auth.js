@@ -9,24 +9,35 @@
     };
 
     function getItem(key) {
-        return localStorage.getItem(storageKeys[key]);
+        var value = localStorage.getItem(storageKeys[key]);
+        if (value === null && typeof sessionStorage !== 'undefined') {
+            value = sessionStorage.getItem(storageKeys[key]);
+        }
+        return value;
     }
 
     function setItem(key, value) {
         if (value !== undefined && value !== null) {
             localStorage.setItem(storageKeys[key], value);
+            if (typeof sessionStorage !== 'undefined') {
+                sessionStorage.setItem(storageKeys[key], value);
+            }
         }
     }
 
     function removeItem(key) {
         localStorage.removeItem(storageKeys[key]);
+        if (typeof sessionStorage !== 'undefined') {
+            sessionStorage.removeItem(storageKeys[key]);
+        }
     }
 
     function clearSession() {
-        removeItem('accessToken');
-        removeItem('refreshToken');
-        removeItem('user');
-        removeItem('username');
+            removeItem('accessToken');
+            removeItem('refreshToken');
+            removeItem('user');
+            removeItem('username');
+            removeItem('token');
     }
 
     function parseJwt(token) {
@@ -87,10 +98,15 @@
 
     function logout(opts) {
         opts = opts || {};
-        var url = opts.url || apiBaseUrl + '/logout';
-        var payload = {};
-        var username = getItem('username');
+
+        // 1. Lấy token trước
+        var accessToken = getItem('accessToken');
         var refreshToken = getItem('refreshToken');
+        var username = getItem('username');
+        var token = getItem('token');
+
+        // 2. Tạo payload
+        var payload = {};
 
         if (username) {
             payload.username = username;
@@ -102,16 +118,18 @@
 
         return $.ajax({
             type: 'POST',
-            url: url,
-
+            url: opts.url || apiBaseUrl + '/logout',
             contentType: 'application/json',
-
-            headers: {
-                'Authorization': getAuthHeader()
-            },
-
             dataType: 'json',
+
+            headers: accessToken
+                ? {
+                    Authorization: 'Bearer ' + accessToken
+                }
+                : {},
+
             data: JSON.stringify(payload)
+
         }).always(function() {
             clearSession();
             if (opts.redirectUrl !== false) {
@@ -207,11 +225,11 @@ window.logout = function() {
     if (window.Auth && window.Auth.logout) {
         return window.Auth.logout({ redirectUrl: 'login.html' });
     }
-    // fallback: clear and navigate
+    // fallback: clear tokens only and navigate
     localStorage.removeItem('access_token');
+    sessionStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
-    localStorage.removeItem('user');
-    localStorage.removeItem('username');
+    sessionStorage.removeItem('refresh_token');
     window.location.href = 'login.html';
 };
 
@@ -294,9 +312,9 @@ $(document).ajaxError(function(event, xhr, settings) {
 
             // fallback
             localStorage.removeItem('access_token');
+            sessionStorage.removeItem('access_token');
             localStorage.removeItem('refresh_token');
-            localStorage.removeItem('user');
-            localStorage.removeItem('username');
+            sessionStorage.removeItem('refresh_token');
 
             window.location.href = 'login.html';
         }

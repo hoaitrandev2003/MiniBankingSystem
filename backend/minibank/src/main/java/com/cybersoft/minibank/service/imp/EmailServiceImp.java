@@ -1,6 +1,7 @@
 package com.cybersoft.minibank.service.imp;
 
 import com.cybersoft.minibank.UserCreatedEvent;
+import com.cybersoft.minibank.kafka.consumer.TransferConsumer;
 import com.cybersoft.minibank.service.EmailService;
 
 
@@ -23,6 +24,9 @@ public class EmailServiceImp implements EmailService {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private TransferConsumer transferConsumer;
+
     @Override
     @KafkaListener(topics = "password-mail-topic", groupId = "minibank-group")
     public void sendSimpleMail(String message) {
@@ -38,6 +42,21 @@ public class EmailServiceImp implements EmailService {
 
         } catch (Exception e) {
             throw new  RuntimeException(e + "Consumer bị lỗi");
+        }
+    }
+
+    public void sendCodeMail(String message) {
+        try {
+//            String stes = transferConsumer.transferEvent(message);
+            SimpleMailMessage mailMessage = new SimpleMailMessage();
+            mailMessage.setFrom(sender);
+            mailMessage.setTo();
+            mailMessage.setSubject("Mã Password tạm của bạn");
+            mailMessage.setText("Mã password tạm của bạn là: " + event.password() + "\nHiệu lực trong 5 phút.");
+
+
+        }catch (Exception e){
+            throw  new  RuntimeException(e.getMessage());
         }
     }
 }

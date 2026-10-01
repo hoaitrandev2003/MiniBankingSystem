@@ -4,7 +4,7 @@ import com.cybersoft.minibank.dto.EmailMessageDTO;
 import com.cybersoft.minibank.dto.TransferRequestDTO;
 import com.cybersoft.minibank.entity.BankAccountEntity;
 import com.cybersoft.minibank.entity.TransactionEntity;
-import com.cybersoft.minibank.payload.request.TransferComfirmRequest;
+import com.cybersoft.minibank.kafka.producer.TransferProducer;
 import com.cybersoft.minibank.repository.BankAccountRepository;
 import com.cybersoft.minibank.repository.TransactionRepository;
 import com.cybersoft.minibank.service.BankAccountService;
@@ -12,6 +12,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
+import tools.jackson.databind.ObjectMapper;
 
 import java.math.BigDecimal;
 import java.security.SecureRandom;
@@ -24,6 +25,16 @@ public class BankAccountServiceImp implements BankAccountService {
 
     @Autowired
     private TransactionRepository transactionRepository;
+    @Autowired
+    private TransferProducer transferProducer;
+    @Autowired
+    private KafkaTemplate<String,String> kafkaTemplate;
+
+    private final ObjectMapper objectMapper;
+
+    public BankAccountServiceImp(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+    }
 
     @Autowired
     private KafkaTemplate<String, Object> kafkaTemplate;
@@ -69,11 +80,12 @@ public class BankAccountServiceImp implements BankAccountService {
         return account.getBalance() ;
     }
 
+    // Chuyển tiền vào tài khoản khac
     @Override
     @Transactional
-    public String transferMoney(TransferRequestDTO request) {
-        // Tìm tài khoản
-        BankAccountEntity fromAccount = accountRepository.findByAccountNumber(String.valueOf(request.getFromAccountNumber()))
+    public void transferMoney(TransferRequestDTO request){
+        // 1. Tìm tài khoản
+        BankAccountEntity fromAccount = accountRepository.findForUpdate(String.valueOf(request.getFromAccountNumber()))
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy người gửi: " + request.getFromAccountNumber()));
 
         BankAccountEntity toAccount = accountRepository.findByAccountNumber(String.valueOf(request.getToAccountNumber()))
@@ -107,78 +119,6 @@ public class BankAccountServiceImp implements BankAccountService {
         tx.setOtpExpiredAt(LocalDateTime.now().plusMinutes(5));
 
         transactionRepository.save(tx);
-
-        // Đưa message vào Kafka
-        // Lấy email trực tiếp từ thực thể User liên kết với tài khoản gửi
-        if (fromAccount.getUserEntity() == null || fromAccount.getUserEntity().getEmail() == null) {
-            throw new RuntimeException("Tài khoản người gửi chưa đăng ký email xác thực!");
-        }
-
-        String userEmail = fromAccount.getUserEntity().getEmail();
-
-        EmailMessageDTO emailMessage = new EmailMessageDTO(
-                userEmail,
-                "Xác thực giao dịch chuyển tiền",
-                "Mã OTP của bạn là: " + otp + ". Mã này có hiệu lực trong 5 phút."
-        );
-
-        // Gửi tới topic tên là "banking-email-verification"
-        kafkaTemplate.send("banking-email-verification", emailMessage);
-
-        return randomCode;
-    }
-
-    @Override
-    public void confirmTransfer(TransferComfirmRequest comfirmRequest) {
-        // Tìm giao dịch PENDING dựa vào mã code
-        TransactionEntity transaction = transactionRepository.findByTransactionCode(comfirmRequest.getTransactionCode())
-                .orElseThrow(() -> new RuntimeException("Giao dịch không tồn tại"));
-
-        if (!"PENDING".equals(transaction.getStatus())) {
-            throw new RuntimeException("Giao dịch này đã được xử lý");
-        }
-
-        // Kiểm tra OTP
-        if (transaction.getOtpExpiredAt().isBefore(LocalDateTime.now())) {
-            transaction.setStatus("FAILED");
-            transactionRepository.save(transaction);
-            throw new RuntimeException("Mã OTP đã hết hạn");
-        }
-
-        if (!transaction.getOtp().equals(comfirmRequest.getOtp())) {
-            throw new RuntimeException("Mã OTP không chính xác");
-        }
-
-        // Thực hiện trừ tiền người gửi và cộng tiền người nhận
-        BankAccountEntity fromAccount = transaction.getFromAccount();
-        BankAccountEntity toAccount = transaction.getToAccount();
-        BigDecimal transferAmount = transaction.getAmount();
-
-        if (fromAccount.getBalance().compareTo(transferAmount) < 0) {
-            transaction.setStatus("FAILED");
-            transactionRepository.save(transaction);
-            throw new RuntimeException("Số dư tài khoản không đủ!");
-        }
-
-        // Thực hiện chuyển tiền
-        fromAccount.setBalance(fromAccount.getBalance().subtract(transferAmount));
-        toAccount.setBalance(toAccount.getBalance().add(transferAmount));
-
-        accountRepository.save(fromAccount);
-        accountRepository.save(toAccount);
-
-        // Cập nhật trạng thái giao dịch thành SUCCESS
-        transaction.setStatus("SUCCESS");
-        transactionRepository.save(transaction);
-    }
-
-    private String generateRandomAlphaNumeric(int length) {
-        String charSet = "0123456789";
-        SecureRandom random = new SecureRandom();
-        StringBuilder sb = new StringBuilder(length);
-        for (int i = 0; i < length; i++) {
-            sb.append(charSet.charAt(random.nextInt(charSet.length())));
-        }
-        return sb.toString();
+        transferProducer.sendTransferSuccess(tx);
     }
 }
