@@ -3,12 +3,15 @@ package com.cybersoft.minibank.service.imp;
 import com.cybersoft.minibank.dto.TransferRequestDTO;
 import com.cybersoft.minibank.entity.BankAccountEntity;
 import com.cybersoft.minibank.entity.TransactionEntity;
+import com.cybersoft.minibank.kafka.producer.TransferProducer;
 import com.cybersoft.minibank.repository.BankAccountRepository;
 import com.cybersoft.minibank.repository.TransactionRepository;
 import com.cybersoft.minibank.service.BankAccountService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
+import tools.jackson.databind.ObjectMapper;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -19,6 +22,16 @@ public class BankAccountServiceImp implements BankAccountService {
     private BankAccountRepository accountRepository;
     @Autowired
     private TransactionRepository transactionRepository;
+    @Autowired
+    private TransferProducer transferProducer;
+    @Autowired
+    private KafkaTemplate<String,String> kafkaTemplate;
+
+    private final ObjectMapper objectMapper;
+
+    public BankAccountServiceImp(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+    }
 
 
     //Nạp tiền
@@ -59,11 +72,12 @@ public class BankAccountServiceImp implements BankAccountService {
         return account.getBalance() ;
     }
 
+    // Chuyển tiền vào tài khoản khac
     @Override
     @Transactional
     public void transferMoney(TransferRequestDTO request){
         // 1. Tìm tài khoản
-        BankAccountEntity fromAccount = accountRepository.findByAccountNumber(String.valueOf(request.getFromAccountNumber()))
+        BankAccountEntity fromAccount = accountRepository.findForUpdate(String.valueOf(request.getFromAccountNumber()))
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy người gửi: " + request.getFromAccountNumber()));
 
         BankAccountEntity toAccount = accountRepository.findByAccountNumber(String.valueOf(request.getToAccountNumber()))
@@ -95,6 +109,6 @@ public class BankAccountServiceImp implements BankAccountService {
         tx.setStatus("SUCCESS");
 
         transactionRepository.save(tx);
+        transferProducer.sendTransferSuccess(tx);
     }
-
 }

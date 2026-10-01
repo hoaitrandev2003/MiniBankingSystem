@@ -1,28 +1,53 @@
-package com.cybersoft.minibank.kafka.consumer;
+package com.cybersoft.minibank.kafka.producer;
 
 import com.cybersoft.minibank.TransferEvent;
 import com.cybersoft.minibank.entity.TransactionEntity;
-import lombok.RequiredArgsConstructor;
+
+import tools.jackson.databind.ObjectMapper;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
-
 @Service
-@RequiredArgsConstructor
 public class TransferProducer {
-    private final KafkaTemplate<String,Object> kafkaTemplate;
+
+    private final KafkaTemplate<String,String> kafkaTemplate;
+
+    private final ObjectMapper objectMapper;
+
+    public TransferProducer(KafkaTemplate<String, String> kafkaTemplate, ObjectMapper objectMapper) {
+        this.kafkaTemplate = kafkaTemplate;
+        this.objectMapper = objectMapper;
+    }
 
     public void sendTransferSuccess(TransactionEntity tx){
 
-        TransferEvent event = TransferEvent.builder()
-                        .transactionId(tx.getId())
-                        .fromAccount(tx.getFromAccount().getAccountNumber())
-                        .toAccount(tx.getToAccount().getAccountNumber())
-                        .amount(tx.getAmount())
-                        .createdAt(LocalDateTime.now())
-                        .build();
+        TransferEvent event =
+                new TransferEvent(
+                        tx.getId(),
+                        tx.getTransactionCode(),
+                        tx.getTransactionType(),
+                        tx.getFromAccount().getAccountNumber(),
+                        tx.getToAccount().getAccountNumber(),
+                        tx.getAmount(),
+                        tx.getStatus(),
+                        tx.getCreatedAt()
+                );
 
-        kafkaTemplate.send("transfer-success-topic", event);
+        try {
+
+            String objEvent = objectMapper.writeValueAsString(event);
+
+            kafkaTemplate.send(
+                    "transfer-success-topic",
+                    objEvent
+            );
+
+        } catch (Exception e) {
+
+            throw new RuntimeException(
+                    "Không thể publish Kafka Event",
+                    e
+            );
+        }
     }
 }
