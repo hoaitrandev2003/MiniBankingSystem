@@ -9,4 +9,5 @@ public class TransferRequestDTO {
     private String fromAccountNumber;
     private String toAccountNumber;
     private BigDecimal amount;
+    private String description;
 }

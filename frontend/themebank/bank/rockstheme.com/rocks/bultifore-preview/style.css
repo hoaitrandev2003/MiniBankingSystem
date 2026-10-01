@@ -484,8 +484,8 @@ div#preloader {
 }
 .s-menu {
     padding: 10px 25px;
-    border: 1px solid #17aac9;
-    background: #17aac9;
+    border: 1px solid #045e70;
+    background: #045e70;
     color: #fff;
     transition: 0.4s;
     font-size: 15px;
@@ -779,7 +779,7 @@ button.cale-btn:hover{
 .nice-select .option.focus, 
 .nice-select .option.selected.focus {
     background-color:transparent;
-    color: :#17aac9;
+    color: #17aac9;
 }
 /*--------------------------------*/
 /* 4. How to work Area
@@ -1346,6 +1346,44 @@ button.cale-btn:hover{
 }
 .app-btn.right-btn:hover::before {
     color: #fff;
+}
+.app-btn.pdf-btn::before {
+    content: "\f1c1";
+}
+.app-btn.excel-btn::before {
+    content: "\f1c3";
+}
+.app-btn.pdf-btn {
+    background: #17aac9;
+    color: #fff;
+    margin-right: 20px;
+}
+.app-btn.pdf-btn::before {
+    color: #fff;
+}
+.app-btn.excel-btn {
+    background: #17aac9;
+    color: #fff;
+    margin-right: 20px;
+}
+.app-btn.excel-btn::before {
+    color: #fff;
+}
+.app-btn.excel-btn:hover{
+    background:transparent;
+    color:#17aac9;
+    transition: 0.4s;
+}
+.app-btn.pdf-btn:hover{
+    background:transparent;
+    color:#17aac9;
+    transition: 0.4s;
+}
+.app-btn.pdf-btn:hover::before {
+    color: #17aac9;
+}
+.app-btn.excel-btn:hover::before {
+    color: #17aac9;
 }
 .download-image {
     margin-left: 30px;

@@ -1,5 +1,6 @@
 package com.cybersoft.minibank.service.imp;
 
+import com.cybersoft.minibank.dto.EmailMessageDTO;
 import com.cybersoft.minibank.dto.TransferRequestDTO;
 import com.cybersoft.minibank.entity.BankAccountEntity;
 import com.cybersoft.minibank.entity.TransactionEntity;
@@ -14,12 +15,14 @@ import org.springframework.stereotype.Service;
 import tools.jackson.databind.ObjectMapper;
 
 import java.math.BigDecimal;
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
 
 @Service
 public class BankAccountServiceImp implements BankAccountService {
     @Autowired
     private BankAccountRepository accountRepository;
+
     @Autowired
     private TransactionRepository transactionRepository;
     @Autowired
@@ -33,6 +36,8 @@ public class BankAccountServiceImp implements BankAccountService {
         this.objectMapper = objectMapper;
     }
 
+    @Autowired
+    private KafkaTemplate<String, Object> kafkaTemplate;
 
     //Nạp tiền
     @Override
@@ -53,10 +58,13 @@ public class BankAccountServiceImp implements BankAccountService {
         accountRepository.save(account);
 
         // 4. Lưu lịch sử giao dịch
+        String randomCode = generateRandomAlphaNumeric(8);
         TransactionEntity transaction = new TransactionEntity();
+        transaction.setTransactionCode(randomCode);
         transaction.setToAccount(account);
         transaction.setAmount(amount);
         transaction.setTransactionType("DEPOSIT");
+        transaction.setStatus("SUCCESS");
         transaction.setDescription(description);
         transaction.setCreatedAt(LocalDateTime.now());
         transactionRepository.save(transaction);
@@ -85,28 +93,30 @@ public class BankAccountServiceImp implements BankAccountService {
 
         // Lấy số tiền cần chuyển
         BigDecimal transferAmount = request.getAmount();
+        String description = request.getDescription();
 
-        // 2. Kiểm tra số dư (Dùng toán tử so sánh < bình thường cho double)
+        // Kiểm tra số dư (Dùng toán tử so sánh < bình thường cho double)
         if (fromAccount.getBalance().compareTo(transferAmount) < 0) {
             throw new RuntimeException(
                     "Số dư không đủ"
             );
         }
 
-        // 3. Thực hiện chuyển tiền
-        fromAccount.setBalance(fromAccount.getBalance().subtract(transferAmount));
-        toAccount.setBalance(toAccount.getBalance().add(transferAmount));
+        // Lưu giao dịch (Dùng TransactionEntity theo chuẩn mới của Lead)
+        String randomCode = generateRandomAlphaNumeric(8);
+        String otp = String.format("%06d", new SecureRandom().nextInt(999999));
 
-        accountRepository.save(fromAccount);
-        accountRepository.save(toAccount);
-
-        // 4. Lưu giao dịch (Dùng TransactionEntity theo chuẩn mới của Lead)
         TransactionEntity tx = new TransactionEntity();
+        tx.setTransactionCode(randomCode);
         tx.setFromAccount(fromAccount); // Thường Lead sẽ để quan hệ Object thay vì Id
         tx.setToAccount(toAccount);
         tx.setAmount(transferAmount); // Nếu bảng Transaction dùng BigDecimal
+        tx.setTransactionType("TRANSFER");
+        tx.setStatus("PENDING");
+        tx.setDescription(description);
         tx.setCreatedAt(LocalDateTime.now());
-        tx.setStatus("SUCCESS");
+        tx.setOtp(otp);
+        tx.setOtpExpiredAt(LocalDateTime.now().plusMinutes(5));
 
         transactionRepository.save(tx);
         transferProducer.sendTransferSuccess(tx);

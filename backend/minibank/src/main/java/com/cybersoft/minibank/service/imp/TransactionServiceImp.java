@@ -34,9 +34,12 @@ public class TransactionServiceImp implements TransactionService {
 
     @Override
     public Page<TransactionDTO> filter(String status, Double fromAmount, Double toAmount, LocalDateTime fromDate, LocalDateTime toDate, Pageable pageable) {
-        Specification<TransactionDTO> specification = Specification.where(TransactionSpecification.dateFilter(fromDate, toDate))
-                .and(TransactionSpecification.hasStatus(status));
-        return transactionRepository.findAll(specification, pageable).map(item -> {
+        Specification<TransactionEntity> specification = Specification.where(TransactionSpecification.dateFilter(fromDate, toDate))
+                .and(TransactionSpecification.hasStatus(status))
+                .and(TransactionSpecification.amountFilter(fromAmount, toAmount));
+
+        Page<TransactionEntity> transactionEntities = transactionRepository.findAll(specification, pageable);
+        return transactionEntities.map(item -> {
             TransactionDTO transactionDTO = new TransactionDTO();
             transactionDTO.setCreatedAt(item.getCreatedAt());
             transactionDTO.setDescription(item.getDescription());

@@ -36,7 +36,7 @@ public class JwtUtilHelper {
         return Jwts.parser()
                 .verifyWith(key)
                 .build()
-                .parseClaimsJws(data)
+                .parseSignedClaims(data)
                 .getPayload()
                 .getSubject();
     }
