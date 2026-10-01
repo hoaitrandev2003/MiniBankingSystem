@@ -1,0 +1,286 @@
+/* Bank card dashboard styles */
+.account-wallet-panel {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg, #0f1d42 0%, #192d61 34%, #0b1732 100%);
+    border-radius: 28px;
+    padding: 28px 28px 24px;
+    color: #fff;
+    box-shadow: 0 24px 42px rgba(9, 17, 38, 0.32);
+    margin-top: 10px;
+    border: 1px solid rgba(255,255,255,0.08);
+    min-height: 285px;
+}
+.account-wallet-panel::before,
+.account-wallet-panel::after {
+    content: "";
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.08);
+}
+.account-wallet-panel::before {
+    width: 240px;
+    height: 240px;
+    right: -80px;
+    top: -100px;
+}
+.account-wallet-panel::after {
+    width: 200px;
+    height: 200px;
+    left: -60px;
+    bottom: -95px;
+}
+.account-card-top {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 22px;
+}
+.card-chip {
+    width: 58px;
+    height: 42px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #f8d88d 0%, #d9a750 100%);
+    position: relative;
+    box-shadow: inset 0 0 0 2px rgba(95, 73, 17, 0.25);
+}
+.card-chip::before,
+.card-chip::after {
+    content: "";
+    position: absolute;
+    inset: 8px 10px;
+    border-radius: 6px;
+    border: 2px solid rgba(96, 73, 13, 0.55);
+}
+.card-chip::after {
+    inset: 18px 14px 8px 14px;
+    border-left: none;
+    border-right: none;
+}
+.bank-brand {
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: 1.8px;
+    color: #eef5ff;
+    opacity: 0.92;
+}
+.account-number-row {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    margin: 14px 0 18px;
+}
+.account-number {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: 2.8px;
+    color: #fff;
+    font-family: "Segoe UI", Arial, sans-serif;
+    margin: 0;
+    flex: 1;
+}
+.account-balance-pill {
+    background: linear-gradient(135deg, rgba(255,255,255,0.12), rgba(255,255,255,0.06));
+    border: 1px solid rgba(255,255,255,0.16);
+    border-radius: 14px;
+    padding: 11px 15px;
+    font-size: 16px;
+    font-weight: 700;
+    color: #e8f9ff;
+    white-space: nowrap;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04);
+}
+.account-balance-pill span {
+    opacity: 0.8;
+    margin-right: 8px;
+    font-weight: 500;
+}
+.account-meta {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    margin-top: 10px;
+}
+.account-label {
+    font-size: 11px;
+    letter-spacing: 1.6px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.72);
+}
+.account-balance {
+    font-size: 18px;
+    font-weight: 700;
+    color: #dff5ff;
+    margin-top: 2px;
+}
+.account-balance span {
+    opacity: 0.8;
+    margin-right: 8px;
+    font-weight: 500;
+}
+.account-holder-name {
+    font-size: 16px;
+    font-weight: 600;
+    margin-top: 6px;
+}
+.account-action-box {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 12px;
+    height: 100%;
+}
+.account-copy-btn,
+.account-qr-btn {
+    width: 172px;
+    border: none;
+    border-radius: 12px;
+    padding: 12px 18px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    transition: all 0.2s ease;
+    box-shadow: 0 10px 18px rgba(0,0,0,0.16);
+}
+.account-copy-btn {
+    background: linear-gradient(135deg, #ffffff 0%, #edf5ff 100%);
+    color: #17264d;
+}
+.account-qr-btn {
+    background: rgba(255,255,255,0.08);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.2);
+}
+.account-copy-btn:hover,
+.account-qr-btn:hover {
+    transform: translateY(-2px);
+    opacity: 0.98;
+}
+.copy-status {
+    min-height: 26px;
+    font-size: 12px;
+    color: #b7f7d1;
+    text-align: right;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    opacity: 0;
+    transform: translateY(6px);
+    transition: all 0.25s ease;
+    padding: 8px 12px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(9, 18, 35, 0.9), rgba(20, 32, 59, 0.95));
+    border: 1px solid rgba(255,255,255,0.12);
+    box-shadow: 0 12px 24px rgba(0,0,0,0.18);
+    pointer-events: none;
+}
+.copy-status.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+.copy-status.success::before {
+    content: "✓";
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    line-height: 18px;
+    text-align: center;
+    border-radius: 50%;
+    background: rgba(183, 247, 209, 0.18);
+    color: #b7f7d1;
+    font-weight: 700;
+}
+.copy-status.error::before {
+    content: "!";
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    line-height: 18px;
+    text-align: center;
+    border-radius: 50%;
+    background: rgba(255, 214, 214, 0.18);
+    color: #ffd6d6;
+    font-weight: 700;
+}
+.qr-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(8, 12, 24, 0.72);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 99999;
+}
+.qr-modal.hidden {
+    display: none;
+}
+.qr-modal-box {
+    width: min(360px, 90vw);
+    background: linear-gradient(135deg, #0f1d42 0%, #192d61 30%, #0a1737 100%);
+    border-radius: 20px;
+    padding: 22px 18px 18px;
+    box-shadow: 0 18px 46px rgba(0,0,0,0.28);
+    text-align: center;
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.12);
+}
+.qr-modal-box img {
+    width: 190px;
+    height: 190px;
+    margin: 10px auto 12px;
+    display: block;
+    background: #fff;
+    border-radius: 16px;
+    padding: 12px;
+}
+.qr-modal-box h5 {
+    margin: 0 0 8px;
+    color: #f5f8ff;
+    font-weight: 700;
+}
+.qr-modal-box .owner-name {
+    font-size: 14px;
+    color: rgba(255,255,255,0.8);
+    margin-bottom: 8px;
+}
+.qr-close-btn {
+    margin-top: 12px;
+    border: none;
+    background: rgba(255,255,255,0.12);
+    color: #fff;
+    border-radius: 10px;
+    padding: 9px 16px;
+    border: 1px solid rgba(255,255,255,0.18);
+}
+@media (max-width: 767px) {
+    .account-wallet-panel {
+        padding: 22px 18px;
+    }
+    .account-action-box {
+        align-items: stretch;
+        margin-top: 18px;
+    }
+    .account-copy-btn,
+    .account-qr-btn {
+        width: 100%;
+    }
+    .copy-status {
+        text-align: left;
+    }
+    .account-number {
+        font-size: 22px;
+        letter-spacing: 2px;
+    }
+}

@@ -72,8 +72,8 @@ $(document).ready(function() {
                         preloader.fadeIn('fast');
                     }
                     setTimeout(function() {
-                        window.location.href = 'index-2.html'; // Thay đổi URL trang
-                    }, 3000);
+                        window.location.href = 'index-3.html';
+                    }, 500);
                 } else {
                     showMessage('Login failed', 'error');
                 }
@@ -189,8 +189,8 @@ $(document).ready(function() {
                     preloader.fadeIn('fast');
                 }
                 setTimeout(function() {
-                    window.location.href = 'index-2.html';
-                }, 3000);
+                    window.location.href = 'index-3.html';
+                }, 500);
             } else {
                 alert('Login did not return access token');
             }

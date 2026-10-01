@@ -1,6 +1,70 @@
 (function ($) {
  "use strict";
 
+    function showTransitionPreloader() {
+        var $preloader = $('#page-transition-preloader');
+        if ($preloader.length === 0) {
+            $preloader = $('<div id="page-transition-preloader"></div>').css({
+                'position': 'fixed',
+                'left': '0',
+                'top': '0',
+                'z-index': '99999',
+                'width': '100%',
+                'height': '100%',
+                'background-color': '#1b2654',
+                'background-image': 'url(img/logo/preloader.gif)',
+                'background-position': 'center center',
+                'background-repeat': 'no-repeat',
+                'overflow': 'visible',
+                'display': 'block'
+            });
+            $(document.body).append($preloader);
+        } else {
+            $preloader.show();
+        }
+    }
+
+    function redirectWithDelay(url, delay) {
+        delay = delay || 1000;
+        if (!url || url === '#' || url.indexOf('javascript:') === 0 || url.indexOf('mailto:') === 0 || url.indexOf('tel:') === 0) {
+            return false;
+        }
+
+        if (url.indexOf('http://') === 0 || url.indexOf('https://') === 0) {
+            if (url.indexOf(window.location.origin) !== 0) {
+                return false;
+            }
+        }
+
+        showTransitionPreloader();
+        setTimeout(function() {
+            window.location.href = url;
+        }, delay);
+        return true;
+    }
+
+    $(document).ready(function() {
+        $(document).on('click', 'a[href]', function (e) {
+            var href = $(this).attr('href');
+            if (!href || href === '#' || $(this).attr('target') === '_blank' || $(this).attr('download')) {
+                return;
+            }
+
+            if (href.indexOf('javascript:') === 0 || href.indexOf('mailto:') === 0 || href.indexOf('tel:') === 0) {
+                return;
+            }
+
+            if (href.indexOf('http://') === 0 || href.indexOf('https://') === 0) {
+                if (href.indexOf(window.location.origin) !== 0) {
+                    return;
+                }
+            }
+
+            e.preventDefault();
+            redirectWithDelay(href, 500);
+        });
+    });
+
 /*--------------------------
 preloader
 ---------------------------- */	
@@ -8,6 +72,7 @@ preloader
 	$(window).on('load',function(){
 		var pre_loader = $('#preloader')
 	pre_loader.fadeOut('slow',function(){$(this).remove();});
+	$('#page-transition-preloader').fadeOut('slow', function() { $(this).remove(); });
 	});	
     
     
@@ -97,8 +162,9 @@ windows.on('scroll', function() {
                         window.Auth.logout({ url: window.Auth.apiBaseUrl + '/logout', redirectUrl: 'login.html' });
                     } else {
                         localStorage.removeItem('access_token');
+                        sessionStorage.removeItem('access_token');
                         localStorage.removeItem('refresh_token');
-                        localStorage.removeItem('user');
+                        sessionStorage.removeItem('refresh_token');
                         window.location.href = 'login.html';
                     }
                 });
